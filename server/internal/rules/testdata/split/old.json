@@ -1,0 +1,7 @@
+{"version":"1.0.0",
+ "families":[{"id":1,"name":"F1","test":"Test one for Sam."},{"id":2,"name":"F2","test":"Test two."}],
+ "rules":[
+  {"id":"A1","family":1,"name":"Alpha","ban":"b","strings":["alpha one","alpha two"],"fix":"f","bad":"Sam's bad","good":"Sam's good"},
+  {"id":"B1","family":2,"name":"Beta","ban":"b","strings":["beta"],"fix":"f","bad":"x","good":"y"},
+  {"id":"C1","family":2,"name":"Gamma","ban":"b","strings":["gamma"],"fix":"f","bad":"x","good":"y","removed":["gamma old"],"removed_reason":"Sam writes it"}],
+ "voice_target":{"note":"n","register":"Sam's register.","asks":"Sam asks."}}

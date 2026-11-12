@@ -1,0 +1,1233 @@
+{
+  "format": 1,
+  "version": "1.0.0",
+  "families": [
+    {
+      "id": 1,
+      "name": "Announcing instead of saying",
+      "test": "Does the sentence tell the reader something is important, interesting, or direct, rather than being it? Cut it.",
+      "principle": "The writing points at itself instead of carrying information."
+    },
+    {
+      "id": 2,
+      "name": "Hollow affirmation",
+      "test": "Does the clause reassure rather than inform? Delete it. If the prior line felt thin, add a concrete fact (stakeholder, scope, deadline, figure), never an adjective.",
+      "principle": "A qualifier that adds no meaning. Delete it and the sentence says the same thing, more plainly."
+    },
+    {
+      "id": 3,
+      "name": "Engineered rhythm",
+      "test": "Read it aloud. Does it sound like a keynote slide or a LinkedIn post instead of the writer talking in a meeting? Rewrite as speech.",
+      "principle": "Sentences composed for percussion instead of speech."
+    },
+    {
+      "id": 4,
+      "name": "Abstraction dodging the plain statement",
+      "test": "Could a reader ask 'what does that actually mean?' Write the causal sentence: what the thing does, for whom, producing what. If the plain version is longer, that is the correct trade.",
+      "principle": "Abstract role-nouns and status labels sound like strategy while carrying no information."
+    },
+    {
+      "id": 5,
+      "name": "Manufactured work",
+      "test": "Does this create an obligation the writer did not state, for anyone? Cut it. End at the last real content sentence.",
+      "principle": "Inventing work for the recipient, volunteering the writer's time, or inventing work for the writer."
+    },
+    {
+      "id": 6,
+      "name": "Fabrication",
+      "test": "Can every figure and characterization be traced to a source? Is every claim about a person's state something the writer said? If no to either, cut it.",
+      "principle": "Numbers must survive scrutiny from finance and leadership. A figure the writer can't point to a source for is worse than no figure. Inventing a person's reaction is worse than inventing a statistic."
+    }
+  ],
+  "rules": [
+    {
+      "id": "K1",
+      "family": 1,
+      "name": "Faux-candor opener",
+      "ban": "Performed candor implies the rest of the text is not straight.",
+      "strings": [
+        "I'll be straight with you",
+        "to be honest",
+        "let me be clear",
+        "frankly speaking",
+        "honestly,"
+      ],
+      "fix": "Delete the opener and say the thing. If the content is direct, it needs no candor label.",
+      "bad": "I'll be straight with you, the number is not defensible.",
+      "good": "The number is not defensible."
+    },
+    {
+      "id": "K2",
+      "family": 1,
+      "name": "Significance preamble",
+      "ban": "Never announce that something is important before saying it.",
+      "strings": [
+        "something that matters",
+        "want to flag something important",
+        "worth pausing on",
+        "take a second on something"
+      ],
+      "fix": "Open with the actual news and let it carry its own weight.",
+      "bad": "Hi team, want to take a second on something that matters.",
+      "good": "Hi team, we shipped the adoption dashboard this morning."
+    },
+    {
+      "id": "K3",
+      "family": 2,
+      "name": "Implied word",
+      "ban": "Never write a word the sentence structure already implies.",
+      "strings": [
+        "absolutely required",
+        "added bonus",
+        "advance planning",
+        "completely empty",
+        "end result",
+        "entirely new",
+        "exactly one",
+        "final outcome",
+        "first ever",
+        "fully complete",
+        "future plans",
+        "past history",
+        "totally finished",
+        "very unique"
+      ],
+      "fix": "Cut the redundant word. Smell test: if removing it changes nothing, it is filler.",
+      "bad": "Each customer has exactly one account manager as their main contact.",
+      "good": "Each customer has one account manager as their main contact.",
+      "exception": "Verbatim quotes. Faithfulness to the source overrides this rule."
+    },
+    {
+      "id": "K4",
+      "family": 3,
+      "name": "Em dash",
+      "ban": "Never, in any context.",
+      "strings": [
+        "—"
+      ],
+      "fix": "Period, parentheses, or restructure. Plain hyphens as casual connectors are Slack-only.",
+      "bad": "The term is promoted by institutions—not by the people themselves.",
+      "good": "The term is promoted by institutions, not by the people themselves."
+    },
+    {
+      "id": "K5",
+      "family": 3,
+      "name": "Negative setup",
+      "ban": "Never state what something is not before stating what it is.",
+      "strings": [
+        "does not merely",
+        "doesn't merely",
+        "not just about",
+        "it's not just",
+        "it's not merely",
+        "none of this means"
+      ],
+      "fix": "Delete the negative clause and state the positive claim directly.",
+      "bad": "The agent does not merely match human performance with greater speed. It exceeds it by eliminating human error.",
+      "good": "The agent exceeds human speed by eliminating human error.",
+      "structural": "not_x_but_y"
+    },
+    {
+      "id": "K6",
+      "family": 2,
+      "name": "Hollow validation / X is real",
+      "ban": "No validation tic that reassures the reader a thing matters without giving information. Includes the 'exactly the kind of X that...' validator frame.",
+      "strings": [
+        "it's a real one",
+        "that's a real one",
+        "a meaningful one",
+        "a genuine one",
+        "the pattern is real",
+        "the work is real",
+        "exactly the kind of"
+      ],
+      "fix": "Delete the whole clause. If the prior sentence feels thin, add a concrete fact, never a self-affirming adjective or frame.",
+      "bad": "I'd like you to take over the training team's account. I ran it for two years and it's a real one.",
+      "good": "I'd like you to take over the training team's account. They're moving 400 sites onto the new system this quarter, so there's an active relationship to carry."
+    },
+    {
+      "id": "K7",
+      "family": 1,
+      "name": "Forced reaction phrase",
+      "ban": "Never signal to the reader that something is about to be interesting.",
+      "strings": [
+        "here's the thing",
+        "here's where it gets interesting",
+        "that's when it clicked",
+        "that's when it hit me",
+        "blew my mind",
+        "what really stood out",
+        "this is the important part"
+      ],
+      "fix": "State the point directly. If the content is interesting, do not announce it. Transition by moving to the next point.",
+      "bad": "Here's where it gets interesting: the guardrails blocked the defenders too.",
+      "good": "The guardrails blocked the defenders too."
+    },
+    {
+      "id": "K10",
+      "family": 5,
+      "name": "Long lists disguised as prose",
+      "ban": "When told no big list, do not enumerate every item in a comma-chained sentence instead. That is still a list.",
+      "strings": [],
+      "fix": "Summarize at a higher level or reference the items conceptually ('the layers underneath') and let the detail live where it belongs.",
+      "bad": "The update improves the interface, speeds load times, adds encryption, refactors the API, and updates the docs.",
+      "good": "The update improves the interface and the layers underneath it."
+    },
+    {
+      "id": "K12",
+      "family": 2,
+      "name": "Reality-contrast appositive",
+      "ban": "Never inflate a claim by appending a dismissive contrast to a strawman nobody raised.",
+      "strings": [
+        "not theory",
+        "not hypothetical",
+        "not projections",
+        "not estimates",
+        "not a paper exercise",
+        "isn't hypothetical",
+        "make no mistake",
+        "aren't just numbers"
+      ],
+      "fix": "Delete the contrast clause and state the fact with its evidence. If a concrete figure follows, the contrast is redundant.",
+      "bad": "The losses are real dollars, not theory: one site missed by $1.6M.",
+      "good": "One site missed by $1.6M and another by $4M."
+    },
+    {
+      "id": "K13a",
+      "family": 3,
+      "name": "Setup-colon-payoff",
+      "ban": "A short assertion, a colon, then a dramatic reveal. Colons introduce lists or specifics, never drama.",
+      "strings": [],
+      "structural": "short_clause_colon_lowercase_payoff",
+      "fix": "Rewrite as a flowing sentence.",
+      "bad": "This email is long on purpose: feed the whole thing to your AI.",
+      "good": "I made this email long so you can feed the whole thing to your AI."
+    },
+    {
+      "id": "K13b",
+      "family": 3,
+      "name": "Negation litany",
+      "ban": "Anaphoric denial lists are ad copy.",
+      "strings": [],
+      "structural": "three_or_more_no_X",
+      "fix": "State what IS wanted in prose. Denial lists only inside verbatim quotes or literal checklists.",
+      "bad": "No frameworks, no workshops, no polls, no builder language.",
+      "good": "Keep it to what the team actually did and what it produced."
+    },
+    {
+      "id": "K13c",
+      "family": 3,
+      "name": "Spec staccato",
+      "ban": "Consecutive clipped sentences each delivering one spec, for rhythm.",
+      "strings": [],
+      "fix": "Chain the specs as speech.",
+      "bad": "That's the whole deliverable. 150 words is the ceiling, 90 is the target.",
+      "good": "Keep posts under 150 words, ideally closer to 90."
+    },
+    {
+      "id": "K13d",
+      "family": 3,
+      "name": "Intentionality tag",
+      "ban": "Claiming deliberateness for punch.",
+      "strings": [
+        "on purpose",
+        "by design"
+      ],
+      "fix": "Say the reason, do not tag the intent.",
+      "bad": "The agenda is small on purpose.",
+      "good": "I kept the agenda to three items so we finish in 30 minutes."
+    },
+    {
+      "id": "K13e",
+      "family": 3,
+      "name": "Escalating comparative doublet",
+      "ban": "A paired construction repeating the first clause's adjective in comparative form so the escalation lands as a mic-drop aphorism. Sounds like earned wisdom, asserts nothing actionable.",
+      "strings": [
+        "hard to screen for and harder to teach",
+        "easy to say, harder to do",
+        "difficult to build and even harder to maintain",
+        "rare to find and rarer to keep"
+      ],
+      "fix": "Replace the aphorism with the specific observation: what the person did and why it was good.",
+      "bad": "That instinct is hard to screen for and harder to teach.",
+      "good": "The way you triaged the incident before escalating is the instinct I look for in senior engineers."
+    },
+    {
+      "id": "K14",
+      "family": 5,
+      "name": "Concierge closer",
+      "ban": "Never end a comm by offering the writer's future time and attention as a service nobody asked for. Three sub-forms: call offer, support offer, open-door filler.",
+      "strings": [
+        "hop on a call",
+        "happy to chat",
+        "happy to walk you through",
+        "let me know if you get stuck",
+        "don't hesitate to reach out",
+        "feel free to reach out",
+        "I'm around if you need",
+        "any questions, just ask"
+      ],
+      "fix": "End at the last real content sentence, or with a specific next step the writer actually chose.",
+      "bad": "The dashboard is live at the link above. Let me know if you get stuck in the tool.",
+      "good": "The dashboard is live at the link above."
+    },
+    {
+      "id": "K15",
+      "family": 2,
+      "name": "Judgment grading",
+      "ban": "Never grade the reader's opinion before overriding it. Condescension dressed as generosity.",
+      "strings": [
+        "that was a fair read",
+        "that's a fair point",
+        "a valid concern",
+        "you're not wrong",
+        "reasonable take",
+        "I get why you'd think that"
+      ],
+      "fix": "State their position as fact and move on, never score it.",
+      "bad": "I know you both leaned toward the first vendor, and that was a fair read.",
+      "good": "I know you both leaned toward the first vendor."
+    },
+    {
+      "id": "K16",
+      "family": 2,
+      "name": "Delivery narration",
+      "ban": "Never narrate the act of delivering the message. The message existing already proves everything the clause claims.",
+      "strings": [
+        "hear it from me directly",
+        "hear it from me first",
+        "reach out personally",
+        "be the one to tell you",
+        "make sure you heard this from me"
+      ],
+      "fix": "Delete the clause and state the news.",
+      "bad": "I've decided to go with the second candidate, and I wanted you to hear it from me directly.",
+      "good": "I've decided to go with the second candidate for the data engineer role."
+    },
+    {
+      "id": "K17",
+      "family": 5,
+      "name": "Meeting deferral",
+      "ban": "Never route a comm's ask into a future meeting or agenda slot. Deferral dressed as a plan.",
+      "strings": [
+        "let's decide at",
+        "cover this in the next sync",
+        "put it on the agenda",
+        "we'll pick this up",
+        "something to discuss when we meet"
+      ],
+      "fix": "State the ask with its options and let the recipient act or reply.",
+      "bad": "Let's decide close-or-transfer at Monday's 1:1.",
+      "good": "Close it or transfer it to the owning team this week. If you're not sure which, ping me.",
+      "exception": "The writer explicitly asked for the item to be deferred to a meeting slot."
+    },
+    {
+      "id": "K18",
+      "family": 1,
+      "name": "Intent-to-say preamble",
+      "ban": "Never announce that you are about to speak plainly instead of just speaking plainly.",
+      "strings": [
+        "I want to be explicit",
+        "I want to be clear",
+        "let me be direct",
+        "I'll say this plainly",
+        "to be blunt",
+        "let me be honest"
+      ],
+      "fix": "Delete the preamble and state the point.",
+      "bad": "On 'unclear asks,' the review's characterization is wrong, and I want to be explicit about it.",
+      "good": "On 'unclear asks,' the review's characterization is wrong."
+    },
+    {
+      "id": "K19",
+      "family": 1,
+      "name": "Stock aphorism",
+      "ban": "Never set up a point with a recognizable stock saying. Smell test: if the phrase could paste unchanged into any other email on any topic, cut it.",
+      "strings": [
+        "we know what good looks like",
+        "at the end of the day",
+        "the proof is in the pudding",
+        "easier said than done",
+        "the name of the game",
+        "it is what it is",
+        "we've been here before",
+        "you get what you pay for"
+      ],
+      "fix": "Delete the phrase and lead with the concrete claim.",
+      "bad": "We know what good looks like. On our best tools we booked the conservative number.",
+      "good": "On our best tools, the conservative estimate is a 30% drop in setup time."
+    },
+    {
+      "id": "K20",
+      "family": 5,
+      "name": "Manufactured asks and unrequested directives",
+      "ban": "Never append follow-up requirements, report-back asks, approval gates, or compliance instructions the writer never stated. Directives about things senior teammates already know read as micromanagement in the writer's name.",
+      "strings": [
+        "run it by me before"
+      ],
+      "fix": "A drafted message contains only asks the writer stated. Default shape: the fact, the link, the writer's intent, an optional resource, stop. Raise real process constraints with the writer in the conversation, never inside their message.",
+      "bad": "Submit to the conference. Run it by me before you send it, and tell me what topic you pick.",
+      "good": "The conference call for talks is open until the 30th, link below. I'd like us to have talks on the program this year."
+    },
+    {
+      "id": "K35",
+      "family": 5,
+      "name": "Justification tail on an ask",
+      "ban": "Never append a clause explaining why an ask matters, why the writer needs the thing, or how much it is needed. State the ask and stop. The writer approves the question; they do not approve a sales pitch bolted to it. This is K20's sibling: K20 is an ask the writer never made, K35 is a justification the writer never made welded onto an ask they did make. It also leaks urgency and priority they did not authorise, and it usually restates a fact the recipient already owns.",
+      "strings": [
+        "and it's the piece we",
+        "that's the piece we need",
+        "which is the piece we need",
+        "and that's what we need most",
+        "which is exactly what we need",
+        "and that's the part we need",
+        "and it's the one thing we need",
+        "since that's what's blocking",
+        "because that's what we're missing",
+        "and that matters because",
+        "and it's the piece that determines",
+        "that's the piece that determines",
+        "which is what determines whether",
+        "and that's what decides whether",
+        "and it's what we need to hit"
+      ],
+      "fix": "Delete the clause. The ask is the last thing in the message. If the recipient genuinely cannot act without a piece of context, that context is its own plain sentence BEFORE the ask, not a trailing justification after it.",
+      "bad": "Is the weekly report built by hand from the shared mailbox, or is there a script behind it? That's the one piece I can't find anywhere, and it's the piece we'd need most for 1,400 sites.",
+      "good": "Is the weekly report built by hand from the shared mailbox, or is there a script behind it? That's the one piece I can't find anywhere."
+    },
+    {
+      "id": "K36",
+      "family": 6,
+      "name": "Inventing the writer's own conviction or state of mind",
+      "ban": "Never write the writer as persuaded, satisfied, convinced, reassured or confident about anything they have not said they are. Writing 'what convinced me' in their voice asserts a position they may not hold, to their own manager. Report the fact and let them decide what it means to them. This is K27 turned inward: K27 bans inventing other people's reactions, K36 bans inventing theirs.",
+      "strings": [
+        "what convinced me",
+        "what convinced me is",
+        "I'm convinced",
+        "I am convinced",
+        "what sold me",
+        "I'm satisfied that",
+        "I am satisfied that",
+        "what gives me confidence",
+        "I'm comfortable that",
+        "what won me over",
+        "I'm persuaded",
+        "having looked at it I'm"
+      ],
+      "fix": "State the evidence as evidence, with no verb of persuasion attached. 'Legal rejected the first round' not 'what convinced me is that legal rejected the first round.' If they have actually stated a view, quote their words.",
+      "bad": "What convinced me is what has already happened. The team sent the survey to about 500 vendors and legal rejected most of what came back.",
+      "good": "The team sent the survey to about 500 vendors and legal rejected most of what came back."
+    },
+    {
+      "id": "K37",
+      "family": 3,
+      "name": "Balanced both-sides verdict",
+      "ban": "Never resolve a mixed picture into a symmetrical verdict that sounds like judgement but commits to nothing. 'Further along in some places and further behind in others', 'ahead in x ways and behind in y', 'some good news and some bad'. The symmetry is invented for cadence, and it usually contradicts the plainer thing the writer actually thinks. Say the one thing that is true, or say the situation is unknown.",
+      "strings": [
+        "in a few places and",
+        "further along than",
+        "in some places and a lot",
+        "in some ways and behind",
+        "on the one hand",
+        "in some respects and",
+        "better in some areas and",
+        "ahead in some",
+        "and further behind in"
+      ],
+      "fix": "Pick the true statement and write only it. If the honest answer is that there are too many unknowns to judge, write that, because 'I don't know yet' is a real position and the balanced verdict is not.",
+      "bad": "My honest read is that this is further along than the ask assumes in a few places and a lot further behind in others.",
+      "good": "My honest read is that there are a lot of unknowns here."
+    },
+    {
+      "id": "K21",
+      "family": 1,
+      "name": "Reaction narration",
+      "ban": "Never narrate the writer's own fascination, rumination, or sense of importance instead of delivering the content. HARD violation in all four positions: lingering-fascination opener, relevance-flag pivot, rumination tag, contemplation-prompt closer.",
+      "strings": [
+        "won't leave me alone",
+        "can't stop thinking about",
+        "rattling around",
+        "keeps nagging",
+        "been chewing on",
+        "here's the part that's actually about us",
+        "here's why this matters for us",
+        "here's the part that hits home",
+        "keep coming back to",
+        "keep chewing on",
+        "keep landing back on",
+        "worth sitting with",
+        "worth chewing on",
+        "let that sink in",
+        "food for thought",
+        "worth a ponder"
+      ],
+      "fix": "Delete the clause entirely. Open with the actual news. Pivot by stating the point. Close on the last concrete fact, never an instruction to reflect.",
+      "bad": "One detail won't leave me alone... Here's the part that's actually about us... That's what I keep coming back to... Worth sitting with.",
+      "good": "State the incident, state the guardrail problem, state what it means for the team's tooling, stop."
+    },
+    {
+      "id": "K22",
+      "family": 5,
+      "name": "Post-delivery commentary",
+      "ban": "After handing over a drafted artifact, never append editorial notes about the drafting itself: which choices were made and why, how an instruction was interpreted, what was kept, or an offer to revise further.",
+      "strings": [
+        "Two notes on what I did",
+        "One thing worth flagging",
+        "say the word if you want it reworded",
+        "Two things on the edits",
+        "Worth knowing that"
+      ],
+      "fix": "Deliver the artifact and stop. Three narrow exceptions, each ONE line, placed BEFORE the artifact: a factual error inside it, a blocker that prevented part of the delivery, or an ambiguity that would change the content and cannot be resolved by the obvious reading.",
+      "bad": "[draft]\n\nTwo notes on what I did: I kept the second paragraph even though you said trim, and I reworded the close.",
+      "good": "[draft]"
+    },
+    {
+      "id": "K23",
+      "family": 6,
+      "name": "Invented aggregates and unsourced characterizations",
+      "ban": "Never compute a figure from source data, or attach an evaluative label to one, and present it as established fact.",
+      "strings": [
+        "never defensible",
+        "mostly paper",
+        "was aspirational",
+        "the majority were never real"
+      ],
+      "fix": "Cite only figures that exist verbatim in the source. Attribute characterizations to whoever made them. If an aggregate helps, compute it in the chat response and label it as derived so the writer decides whether to include it.",
+      "bad": "Roughly $19,000 of the vendor renewal was mostly paper.",
+      "good": "The finance tracker lists $19,000 in pending renewal costs; finance's own note says most of that was never finalized."
+    },
+    {
+      "id": "K24",
+      "family": 4,
+      "name": "Abstraction substituted for the plain statement",
+      "ban": "Never name a thing with an abstract role-noun instead of saying what it does. Consulting-deck vocabulary.",
+      "strings": [
+        "is the vehicle",
+        "is the lever",
+        "is the unlock",
+        "is the path",
+        "is the mechanism",
+        "is the engine",
+        "is the bridge",
+        "is the foundation",
+        "is the enabler",
+        "is the catalyst",
+        "is the springboard"
+      ],
+      "fix": "Write the causal sentence: what the thing does, for whom, producing what. If the plain version runs longer, that is the correct trade.",
+      "bad": "The pilot is the vehicle.",
+      "good": "The pilot is how we'll test the new intake form with two teams before everyone uses it."
+    },
+    {
+      "id": "K25",
+      "family": 4,
+      "name": "Telegraphic label-shorthand",
+      "ban": "Never compress what a person is doing into a <Noun> is the <noun> equation, or into bare comma-fragments used as status. It drops the subject and verb so the reader supplies the meaning, and it loses precision.",
+      "strings": [
+        "is the target",
+        "is the ask",
+        "is the play"
+      ],
+      "fix": "Give every claim about a person a human subject and a real verb.",
+      "bad": "Promotion is the target.",
+      "good": "She's working toward a promotion within her job family.",
+      "exception": "Table cells and quick-reference cards where the surrounding structure supplies the subject."
+    },
+    {
+      "id": "K26",
+      "family": 4,
+      "name": "Intensifier padding",
+      "ban": "Never prop up a verb or adjective with an intensifier adverb. The intensifier asks the reader to accept a magnitude instead of showing it.",
+      "strings": [
+        "badly",
+        "significantly",
+        "dramatically",
+        "considerably",
+        "substantially",
+        "deeply",
+        "heavily",
+        "massively",
+        "hugely",
+        "greatly",
+        "extremely",
+        "notably",
+        "markedly",
+        "sharply",
+        "wildly",
+        "incredibly",
+        "remarkably"
+      ],
+      "fix": "Delete the adverb. If magnitude matters, supply the fact that establishes it, never a stronger adverb.",
+      "bad": "The hours number undersells her work badly.",
+      "good": "The hours number undersells her work: none of the shared tools, the training sessions or the team infrastructure shows up in it.",
+      "exception": "The writer used the word themselves in source material being quoted or closely paraphrased."
+    },
+    {
+      "id": "K27",
+      "family": 6,
+      "name": "Assumed reactions and invented emotional reads",
+      "ban": "Never predict how a person will feel about, interpret, or react to a decision when the writer never said it. This is fabrication about a human being, with worse consequences than a fabricated statistic.",
+      "strings": [
+        "available reading",
+        "is likely to take this as",
+        "may be feeling",
+        "the risk is he reads this as",
+        "will probably feel"
+      ],
+      "fix": "Use (a) the writer's own stated read, quoted or closely paraphrased, (b) the observable fact with no interpretation attached, or (c) ask the writer. Never synthesize a reaction from the shape of the situation.",
+      "bad": "Her available reading right now is 'my project got cancelled and nobody told me'.",
+      "good": "She was told her project ends this quarter."
+    },
+    {
+      "id": "K28",
+      "family": 4,
+      "name": "Meta-commentary on the writer's own argument",
+      "ban": "Never editorialize on the quality, provenance, or virtue of a point instead of making the point. Three forms: coy withholding, self-validating rationale, borrowed-metaphor shorthand.",
+      "strings": [
+        "and it isn't ours",
+        "which is what makes it usable",
+        "keeps the page honest",
+        "that's what makes it defensible",
+        "earns the claim",
+        "carrying the whole argument",
+        "what holds it together",
+        "touch the altitude",
+        "the shape is right",
+        "the frame works",
+        "the arc holds"
+      ],
+      "fix": "Name the thing first. Delete the virtue clause and keep the ask. Say the plain quality.",
+      "bad": "The new vendor's pricing model is simpler, and it isn't ours, which is what makes it usable.",
+      "good": "The new vendor's flat per-seat pricing is $4 cheaper per seat than ours."
+    },
+    {
+      "id": "G7",
+      "family": 4,
+      "name": "AI vocabulary",
+      "ban": "Words that appear far more often in text written by AI models since 2023 than in people's own writing.",
+      "strings": [
+        "delve",
+        "utilize",
+        "facilitate",
+        "streamline",
+        "holistic",
+        "tapestry",
+        "testament",
+        "underscore",
+        "underscores",
+        "pivotal",
+        "crucial",
+        "vibrant",
+        "interplay",
+        "intricate",
+        "fostering",
+        "garner",
+        "showcase",
+        "showcases",
+        "dive into",
+        "unpack this",
+        "unpack that",
+        "navigate the complexities",
+        "navigate this"
+      ],
+      "fix": "Use the clearest word, not the most impressive one.",
+      "bad": "Let's delve into the intricate landscape of adoption.",
+      "good": "Here's what adoption looks like across the five tools.",
+      "removed": [
+        "robust",
+        "landscape"
+      ],
+      "removed_reason": "Un-banned: real writers use 'robust' and 'landscape' in their own messages."
+    },
+    {
+      "id": "G19",
+      "family": 3,
+      "name": "Curly quotation marks",
+      "ban": "Smart quotes instead of straight quotes.",
+      "strings": [
+        "“",
+        "”",
+        "‘",
+        "’"
+      ],
+      "fix": "AUTOFIX SILENTLY. This is an input-method artifact, not a writing choice. Do not surface it as a violation.",
+      "autofix": true,
+      "bad": "He said “the project is on track”.",
+      "good": "He said \"the project is on track\".",
+      "exclude_from_brief": true
+    },
+    {
+      "id": "G16",
+      "family": 3,
+      "name": "Inline-header vertical list",
+      "ban": "List items starting with a bolded header followed by a colon.",
+      "strings": [],
+      "structural": "bold_label_colon_list_item",
+      "fix": "Write it as prose, or use plain list items.",
+      "bad": "- **User Experience:** The interface has been improved.",
+      "good": "The update improves the interface and speeds up load times."
+    },
+    {
+      "id": "G17",
+      "family": 3,
+      "name": "Title case heading",
+      "ban": "Capitalizing all main words in a heading.",
+      "strings": [],
+      "structural": "title_case_heading",
+      "fix": "Sentence case.",
+      "bad": "## Strategic Negotiations And Global Partnerships",
+      "good": "## Strategic negotiations and global partnerships"
+    },
+    {
+      "id": "G18",
+      "family": 3,
+      "name": "Emoji",
+      "ban": "Decorating headings or bullets with emojis.",
+      "strings": [],
+      "structural": "emoji",
+      "fix": "Delete. State the content.",
+      "bad": "🚀 **Launch Phase:** The product launches in Q3",
+      "good": "The product launches in Q3."
+    },
+    {
+      "id": "G23",
+      "family": 2,
+      "name": "Filler phrase",
+      "ban": "Phrases that add words without adding information.",
+      "strings": [
+        "due to the fact that",
+        "at this point in time",
+        "in the event that",
+        "has the ability to",
+        "it is important to note",
+        "it's worth noting",
+        "in terms of"
+      ],
+      "fix": "Cut to the shorter form.",
+      "bad": "It is important to note that the data shows a decline.",
+      "good": "The data shows a decline.",
+      "removed": [
+        "in order to"
+      ],
+      "removed_reason": "Un-banned: real writers use 'in order to' in informal messages."
+    },
+    {
+      "id": "G27",
+      "family": 4,
+      "name": "Persuasive authority trope",
+      "ban": "Phrases that pretend to cut through noise to a deeper truth, when the sentence that follows just restates an ordinary point with extra ceremony.",
+      "strings": [
+        "the real question is",
+        "at its core",
+        "what really matters",
+        "the deeper issue",
+        "the heart of the matter",
+        "fundamentally"
+      ],
+      "fix": "State the point without the ceremony.",
+      "bad": "The real question is whether the team can ship by June. At its core, what really matters is the staffing plan.",
+      "good": "Whether the team can ship by June depends on the staffing plan."
+    },
+    {
+      "id": "G28",
+      "family": 1,
+      "name": "Signposting",
+      "ban": "Announcing what you are about to do instead of doing it.",
+      "strings": [
+        "here's what you need to know",
+        "let's break this down",
+        "let's dive in",
+        "let's explore",
+        "now let's look at",
+        "without further ado"
+      ],
+      "fix": "Just do it.",
+      "bad": "Let's dive into how caching works. Here's what you need to know.",
+      "good": "Next.js caches data at multiple layers, including request memoization and the router cache."
+    },
+    {
+      "id": "P5",
+      "family": 3,
+      "name": "Transition-word overuse",
+      "ban": "Formal transition words as sentence starters.",
+      "strings": [
+        "Moreover",
+        "Furthermore",
+        "Additionally",
+        "Consequently",
+        "In addition"
+      ],
+      "fix": "Start with the content, or use 'and' / 'so' / 'but'.",
+      "bad": "Additionally, the rollout slipped two weeks.",
+      "good": "The rollout also slipped two weeks."
+    },
+    {
+      "id": "V1",
+      "family": 3,
+      "name": "Banned closing and courtesy phrase",
+      "ban": "Courtesy formulas that carry nothing, and closings the writer doesn't use.",
+      "strings": [
+        "hope this email finds you well",
+        "hope this finds you well",
+        "I completely understand",
+        "Absolutely!",
+        "Certainly!"
+      ],
+      "fix": "Close the way the writer closes in their own messages; the profile says how. Open with the writer's own greeting, flowing into the first sentence.",
+      "bad": "Hope this email finds you well. The dashboard is live.",
+      "good": "The dashboard is live.",
+      "removed": [
+        "That said,",
+        "That being said,"
+      ],
+      "removed_reason": "Un-banned: real writers open sentences with 'That said,' in their own messages."
+    },
+    {
+      "id": "K29",
+      "family": 4,
+      "name": "Idiom flattened into its explanation",
+      "ban": "Never replace one of the writer's idioms with a literal gloss of what it means. The idiom is the voice; the explanation is the tell.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Keep the idiom. If the draft reaches for a concept one of the writer's idioms covers (the profile and the voice target list them), use the idiom.",
+      "bad": "This is a small change we can deliver fast that shows results early.",
+      "good": "This is a quick win."
+    },
+    {
+      "id": "K30",
+      "family": 5,
+      "name": "Recapping content the recipient already has",
+      "ban": "Never summarize a thread, document, or attachment for someone you are forwarding it to. They can read it.",
+      "strings": [
+        "so you have it",
+        "for your awareness",
+        "forwarding the thread",
+        "to summarize the thread",
+        "as background"
+      ],
+      "fix": "Give the ONE thing the reader needs that is not already in front of them: the writer's read, the distinction, or why they are sending it. Then stop.",
+      "bad": "Forwarding the thread so you have it. The vendor recommended an off-the-shelf tool over the one we built, and handed the roadmap decision to another team. I pushed back.",
+      "good": "I pushed back on the vendor here because their recommendation keeps the tool we're trying to replace."
+    },
+    {
+      "id": "K31",
+      "family": 6,
+      "name": "Resolving an open question into a position",
+      "ban": "When the source says someone ASKED a question and the writer has a view on the subject, never convert their view into an answer to the question. Stating value in a thing is not voting yes on adopting it.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "State exactly the view the source attributes to the writer, scoped to what it actually covers. If the source forbids a recommendation, the draft contains no recommendation.",
+      "bad": "I think there's value in the new review process and in rolling it out to every team. (The source said only that the writer sees value in it.)",
+      "good": "I think there's value in this."
+    },
+    {
+      "id": "K32",
+      "family": 3,
+      "name": "Doubled comparative construction",
+      "ban": "Never stack two comparative/preference frames in one sentence ('Rather than X, I would rather Y', 'Instead of X, I'd prefer instead to Y'). One frame carries the contrast; the second is redundant and reads laboured.",
+      "strings": [],
+      "structural": "doubled_rather",
+      "fix": "Keep one. 'Instead of rushing the review, let's move it to next week.'",
+      "bad": "Rather than rush the review, I would rather move it to next week.",
+      "good": "Instead of rushing the review, let's move it to next week."
+    },
+    {
+      "id": "K33",
+      "family": 3,
+      "name": "Full stop as emphasis",
+      "ban": "Never use 'full stop' as a percussive period-substitute to punch up a statement.",
+      "strings": [
+        "full stop",
+        "end of story",
+        "no two ways about it"
+      ],
+      "fix": "State the point plainly. The sentence carries its own weight without the tag.",
+      "bad": "I'm staying on as your manager, full stop.",
+      "good": "I'm staying on as your manager."
+    },
+    {
+      "id": "K38",
+      "family": 6,
+      "name": "Team-size-times-duration framing",
+      "ban": "Never pair a team's headcount with the full elapsed time as the frame for one piece of work (e.g. 'the five of us spent six weeks doing X') -- it implies that was the only thing the team did in that window, which misrepresents their time even when the figures are correct.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "State what was done and over what dates, and say explicitly that it ran alongside other work if that's true.",
+      "bad": "The five of us searched every site in six weeks.",
+      "good": "Between late September and early November, the team searched every site, alongside its other work."
+    },
+    {
+      "id": "K39",
+      "family": 6,
+      "name": "'We' for the writer's own solo work",
+      "ban": "Never write 'we' for something the writer did by themselves. Crediting a team for their individual work misattributes it, same as inventing any other fact.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Use 'I' when the source says the writer alone did the work; reserve 'we' for work other people actually shared.",
+      "bad": "We built the first estimate.",
+      "good": "I built the first estimate."
+    },
+    {
+      "id": "W1",
+      "family": 3,
+      "name": "A rejected option that costs nothing to cut",
+      "ban": "A contrast built from a setup and a rejection earns its place only when cutting the setup costs the reader something they need to act correctly: a direction to follow, a warning, a choice between options, or a hard fact. Cut it also when the rejected half exists only to make the writer look careful, or to put distance between the writer and some other view.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Remove the half that got rejected and let the remaining claim stand on its own.",
+      "bad": "The repair clinic fixes flats, not whole overhauls.",
+      "good": "The repair clinic fixes flats.",
+      "exception": "An exception survives if it tells the reader who has the final call or what to avoid doing, for example: 'the plot coordinator approves the seed order, not each gardener individually.'",
+      "test": "A contrast built from a setup and a rejection earns its place only when cutting the setup costs the reader something they need to act correctly: a direction to follow, a warning, a choice between options, or a hard fact. Cut it also when the rejected half exists only to make the writer look careful, or to put distance between the writer and some other view."
+    },
+    {
+      "id": "W2",
+      "family": 6,
+      "name": "A rate of change with no anchor point",
+      "ban": "A percentage or an amount of change needs the two figures it sits between and the dates those figures cover. If the source never gave a starting figure, don't manufacture one.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "State the before and after numbers and the dates between them. When the source only gives the bare figure, report only the bare figure.",
+      "bad": "Attendance climbed 30%.",
+      "good": "Thursday trivia night attendance climbed from 40 to 52 people between April and June.",
+      "test": "A percentage or an amount of change needs the two figures it sits between and the dates those figures cover. If the source never gave a starting figure, don't manufacture one."
+    },
+    {
+      "id": "W3",
+      "family": 4,
+      "name": "A passive sentence with the actor missing",
+      "ban": "A passive sentence that keeps the person or group responsible out of the picture.",
+      "strings": [
+        "an error was introduced",
+        "it was agreed",
+        "concerns were raised",
+        "the deadline was missed",
+        "a call was made",
+        "it was decided",
+        "mistakes were made"
+      ],
+      "fix": "Name who actually did it.",
+      "bad": "An error was introduced into the schedule, and nobody noticed for two weeks.",
+      "good": "The new volunteer coordinator mistyped the schedule, and nobody noticed for two weeks."
+    },
+    {
+      "id": "W4",
+      "family": 3,
+      "name": "An either/or that skips the real middle ground",
+      "ban": "Presenting two choices as the only ones on the table when a third, real option exists.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Name the options that are genuinely available, including the one left out.",
+      "bad": "Either the choir switches to Thursday nights or half the members quit.",
+      "good": "The choir could move to Thursday nights, split into two smaller groups that meet on different days, or stay as is and accept that three members can't make Tuesdays.",
+      "test": "Presenting two choices as the only ones on the table when a third, real option exists."
+    },
+    {
+      "id": "W5",
+      "family": 3,
+      "name": "A question the writer poses just to answer it",
+      "ban": "A question the text poses only so it can turn around and answer it a beat later, for show.",
+      "strings": [
+        "What happened next?",
+        "The catch?",
+        "So what's the fix?",
+        "The result?",
+        "The answer?"
+      ],
+      "fix": "Skip the question and give the answer straight away.",
+      "bad": "What happened next? Signups doubled.",
+      "good": "Signups went from 18 to 36 the week after the flyer went out."
+    },
+    {
+      "id": "W6",
+      "family": 4,
+      "name": "A borrowed verb covering for is or has",
+      "ban": "A dressed-up verb doing the plain job of is or has.",
+      "strings": [
+        "functions as",
+        "operates as",
+        "flaunts",
+        "serves as",
+        "stands as",
+        "boasts"
+      ],
+      "fix": "Swap it for is, has, or whatever plain verb actually fits.",
+      "bad": "The shed log flaunts a full history of every tool checked out since spring.",
+      "good": "The shed log has a full history of every tool checked out since spring."
+    },
+    {
+      "id": "W7",
+      "family": 1,
+      "name": "An afterthought clause claiming weight it hasn't earned",
+      "ban": "A clause tacked onto the end of a sentence to claim a weight the facts in front of it haven't earned.",
+      "strings": [
+        "spotlighting the importance",
+        "driving home the point",
+        "reinforcing the case",
+        "highlighting the need",
+        "underscoring the"
+      ],
+      "fix": "Cut the clause, or pull it into its own sentence backed by real evidence.",
+      "bad": "Carpool sign-ups jumped after the gas price spike, driving home the point that people really do respond to cost.",
+      "good": "Carpool sign-ups jumped after the gas price spike."
+    },
+    {
+      "id": "W8",
+      "family": 1,
+      "name": "Claiming carefulness instead of proving it",
+      "ban": "A contrast that claims care over carelessness without pointing to any record that proves it.",
+      "strings": [
+        "counted, not guessed",
+        "checked, not assumed",
+        "recorded rather than recalled"
+      ],
+      "fix": "Delete the claim and name the record: the tally, the log or the source.",
+      "bad": "Attendance is checked, not assumed.",
+      "good": "Attendance comes from the sign-in sheet at the door: 34 names."
+    },
+    {
+      "id": "W9",
+      "family": 2,
+      "name": "A closing promise riding on an unmeasured payoff",
+      "ban": "A closing phrase riding on the back of a real fact, claiming a payoff nobody actually measured.",
+      "strings": [
+        "time for the work that counts",
+        "focus on bigger things"
+      ],
+      "fix": "Cut it, or replace it with the benefit you can actually point to a number for.",
+      "bad": "The new drop-off bin shortens the donation line, so volunteers get time for the work that counts.",
+      "good": "The new drop-off bin cuts the donation line from 10 minutes to 2."
+    },
+    {
+      "id": "W10",
+      "family": 4,
+      "name": "A future payoff promised with nothing behind it",
+      "ban": "Claiming a future payoff without saying what inside the system actually produces it.",
+      "strings": [
+        "opens the door to",
+        "clears the way for",
+        "will unlock"
+      ],
+      "fix": "Name the mechanism and the concrete next step that makes it happen.",
+      "bad": "The new locker system opens the door to faster pickups.",
+      "good": "The lockers text a code when an order arrives, so pickup takes under a minute."
+    },
+    {
+      "id": "W11",
+      "family": 3,
+      "name": "A broken-off fragment standing in for a sentence",
+      "ban": "A sentence fragment dropped in purely for punch, carrying no statement of its own.",
+      "strings": [
+        "No exceptions.",
+        "That's the whole idea.",
+        "Nothing stays the same after that."
+      ],
+      "fix": "Write it as a full sentence, or remove it.",
+      "bad": "The shed stays locked after dark. No exceptions.",
+      "good": "The shed stays locked after dark, even during the barbecue."
+    },
+    {
+      "id": "W12",
+      "family": 3,
+      "name": "A grand pairing that dresses up two plain facts",
+      "ban": "A paired construction ('not merely X, but also Y') used to inflate two facts that would carry fine side by side.",
+      "strings": [
+        "not merely",
+        "not simply",
+        "not only"
+      ],
+      "fix": "Drop the pairing and state both facts in their own clauses.",
+      "bad": "The new route is not merely shorter but also easier to ride in winter.",
+      "good": "The new route is two miles shorter and stays clear of ice in winter."
+    },
+    {
+      "id": "W13",
+      "family": 3,
+      "name": "A symbol standing where a verb belongs",
+      "ban": "A greater-than sign, an arrow or a similar symbol used to do a verb's job inside a prose sentence.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Turn the symbol into words that say what happens. A flowchart or a menu path like 'Settings > Printers' is the only place these symbols still belong.",
+      "bad": "Raw notes → clean minutes → posted agenda.",
+      "good": "A volunteer cleans up the raw notes and posts them as the agenda.",
+      "test": "A greater-than sign, an arrow or a similar symbol used to do a verb's job inside a prose sentence."
+    },
+    {
+      "id": "W14",
+      "family": 1,
+      "name": "An opener that flags a recap is coming",
+      "ban": "A lead-in phrase that announces a summary is coming, instead of just giving the summary.",
+      "strings": [
+        "To wrap up,",
+        "All told,",
+        "Taking stock,",
+        "Putting it together,",
+        "Bottom line,",
+        "In summary,",
+        "In conclusion,",
+        "To sum up,"
+      ],
+      "fix": "Delete the lead-in. If the summary only repeats what was already said, delete the summary too.",
+      "bad": "To wrap up, the bake sale raised more than last year.",
+      "good": "The bake sale raised $420, up from $300 last year."
+    },
+    {
+      "id": "W15",
+      "family": 5,
+      "name": "A push for speed that never says by when",
+      "ban": "Language pushing for speed that never says by when.",
+      "strings": [
+        "without delay",
+        "right away",
+        "ASAP"
+      ],
+      "fix": "Attach the actual date and time, or remove the push for speed.",
+      "bad": "We need the final headcount without delay.",
+      "good": "We need the final headcount by Friday at 5pm so the caterer can order enough food."
+    },
+    {
+      "id": "W16",
+      "family": 2,
+      "name": "Excitement performed instead of news delivered",
+      "ban": "A burst of feeling words standing where the actual news should be.",
+      "strings": [
+        "ecstatic",
+        "elated",
+        "overjoyed",
+        "stoked to announce",
+        "thrilled",
+        "excited to announce"
+      ],
+      "fix": "Delete the feeling words and state what happened.",
+      "bad": "We're ecstatic to share that the garden plots are open for sign-up.",
+      "good": "Garden plot sign-up opens Monday."
+    },
+    {
+      "id": "W17",
+      "family": 1,
+      "name": "Telling the reader something is huge instead of showing why",
+      "ban": "Announcing how big a moment is instead of giving the number or result that would make it obvious anyway.",
+      "strings": [
+        "watershed moment",
+        "paradigm-shifting",
+        "monumental shift",
+        "paves the way for",
+        "lays the groundwork for",
+        "game-changer",
+        "game-changing",
+        "transformative",
+        "setting the stage for"
+      ],
+      "fix": "State the number or the consequence and let that carry the weight instead of the label.",
+      "bad": "Moving the raffle online marked a monumental shift for how the club raises money.",
+      "good": "Moving the raffle online raised $600 more than the paper tickets did last year."
+    },
+    {
+      "id": "W18",
+      "family": 2,
+      "name": "Praise words standing in for a reason to be impressed",
+      "ban": "An adjective doing the work of a fact it never supplies.",
+      "strings": [
+        "industry-leading",
+        "next-generation",
+        "top-tier",
+        "pioneering",
+        "first-of-its-kind",
+        "world-class",
+        "cutting-edge",
+        "groundbreaking",
+        "state-of-the-art"
+      ],
+      "fix": "Swap the adjective for the fact that would earn it, or cut the adjective.",
+      "bad": "The club unveiled a first-of-its-kind ticketing booth for the fall fair.",
+      "good": "The club built a ticketing booth with two windows instead of one, so the line moves twice as fast."
+    },
+    {
+      "id": "W19",
+      "family": 4,
+      "name": "A sentence that would fit any other topic unchanged",
+      "ban": "If dropping in an unrelated topic wouldn't change a single word, the sentence has no content of its own.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Replace it with the specific detail from the source: who did it, the count, the date, or how it worked. Don't invent a detail the source doesn't give.",
+      "bad": "Things are moving in the right direction across the board.",
+      "good": "The hiking club added two new Saturday routes and recruited six trail leaders this season.",
+      "test": "If dropping in an unrelated topic wouldn't change a single word, the sentence has no content of its own."
+    },
+    {
+      "id": "W20",
+      "family": 3,
+      "name": "The same opening word or shape, sentence after sentence",
+      "ban": "Three or more sentences, list items or sections in a row that open the same grammatical way.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Change how at least one of them opens, or merge several into a single sentence.",
+      "bad": "The trail crew cleared the fallen branch. The trail crew repainted the blue markers. The trail crew restocked the first-aid box.",
+      "good": "The trail crew cleared the fallen branch, repainted the blue markers, and restocked the first-aid box.",
+      "test": "Three or more sentences, list items or sections in a row that open the same grammatical way."
+    },
+    {
+      "id": "W21",
+      "family": 4,
+      "name": "Switching the name of the same thing mid-document",
+      "ban": "The same object, process or result picked up under a fresh label each time the text returns to it.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Settle on one label for it and use that label every time it comes up again.",
+      "bad": "The clinic's waitlist kept growing. Front desk calls it a waitlist, the scheduling software calls the same thing a queue, and the monthly report calls it a backlog.",
+      "good": "The clinic's waitlist kept growing. Front desk, the scheduling software and the monthly report all call it the waitlist.",
+      "test": "The same object, process or result picked up under a fresh label each time the text returns to it."
+    },
+    {
+      "id": "W22",
+      "family": 2,
+      "name": "A sentence that just says the last one again",
+      "ban": "A line whose only job is to say, in different words, what the previous line already said, including an ending that loops back to repeat the beginning.",
+      "strings": [],
+      "structural": "judgment_only",
+      "fix": "Cut the line that adds nothing new.",
+      "bad": "Reservations open Friday at noon. Basically, noon on Friday is when people can start booking.",
+      "good": "Reservations open Friday at noon.",
+      "test": "A line whose only job is to say, in different words, what the previous line already said, including an ending that loops back to repeat the beginning."
+    }
+  ],
+  "voice_target": {
+    "note": "Prohibitions say what to avoid; these say what to hit. Setup replaces them with what it measures in the writer's own messages.",
+    "register": "Plain professional. Direct without being blunt, warm without gushing.",
+    "contractions": {
+      "rule": "Use contractions where the writer would say them aloud. Dropping them all reads stiff, and contracting every eligible phrase reads mechanical.",
+      "examples": [
+        "we're",
+        "don't",
+        "I'm",
+        "it's",
+        "that's",
+        "won't",
+        "can't",
+        "I'd"
+      ]
+    },
+    "person": "'We' for work a team shared. 'I' for the writer's own opinions, asks and work.",
+    "sentences": "Mixed lengths: a short statement, then a longer one that adds context. Avoid a run of sentences the same length.",
+    "asks": "Put the ask in the same sentence as its reason, in first person, with concrete details (a time, a date, a number), never an abstract noun.",
+    "authority": "Claim no more authority than the writer did. A proposal stays a proposal.",
+    "stance": "Say whether something is decided or proposed exactly as the writer did.",
+    "praise": "Specific: what the person did and what it produced.",
+    "texture": "Keep the writer's casual texture, such as abbreviations and spoken word order. Don't smooth it out.",
+    "uncertainty": "When the writer doesn't know something, the draft says so plainly.",
+    "phrases_he_uses": [],
+    "punctuation": {
+      "em_dash": "never, any context",
+      "hyphen_as_connector": "informal chat only",
+      "exclamation": "sparingly",
+      "ellipsis": "rarely",
+      "semicolon": "rarely",
+      "parentheses": "brief asides",
+      "colon": "introduces a list or specifics, never drama",
+      "oxford_comma": "follow the writer's own messages"
+    },
+    "address_the_reader": "Write to the reader, not about them. Use 'you' when the message has a recipient.",
+    "sentence_targets": "Setup measures the writer's sentence length and comma use from their own messages. Until then, mix short and long sentences.",
+    "length_floor": "Don't under-write. If the source has three substantive points, the draft has three, each with its reasoning."
+  }
+}

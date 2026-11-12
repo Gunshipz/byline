@@ -1,0 +1,71 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/bin/byline-hook\" hook session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/bin/byline-hook\" hook prompt",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^Read$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/bin/byline-hook\" hook read",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^mcp__(plugin_.+_)?(claude_ai_Microsoft_365__outlook_send_mail|claude_ai_Microsoft_365__outlook_forward_mail|claude_ai_Microsoft_365__outlook_send_draft|claude_ai_Microsoft_365__outlook_create_draft|claude_ai_Microsoft_365__outlook_create_reply_draft|claude_ai_Microsoft_365__outlook_create_reply_all_draft|claude_ai_Microsoft_365__outlook_update_draft|claude_ai_Microsoft_365__teams_send_chat_message|claude_ai_Microsoft_365__teams_send_channel_message|claude_ai_Microsoft_365__teams_reply_channel_message|gmail__send_email|gmail__draft_email|workspace-mcp__send_gmail_message|workspace-mcp__draft_gmail_message|slack__conversations_add_message)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/bin/byline-hook\" hook pre-tool",
+            "timeout": 30,
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "^mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/bin/byline-hook\" hook pre-tool --extra",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "^Skill$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/bin/byline-hook\" hook pre-tool",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

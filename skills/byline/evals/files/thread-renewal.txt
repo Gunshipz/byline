@@ -1,0 +1,11 @@
+From: Priya Nandy <priya.nandy@northwindlogistics.example>
+To: Sam Ortiz <sam.ortiz@example.com>
+Subject: Contract renewal, need a couple things from you
+Date: 2 March
+
+Hi Sam,
+
+Our contract renews 14 March, and I want to lock the terms before then. Can you confirm we're still covering 24 trucks under the new rate, and flag anything that's changing on your side before the renewal date?
+
+Thanks,
+Priya

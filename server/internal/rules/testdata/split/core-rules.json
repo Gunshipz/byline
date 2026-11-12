@@ -1,0 +1,7 @@
+{"format":1,"version":"0.9.0",
+ "families":[{"id":1,"name":"F1","test":"Test one."},{"id":2,"name":"F2","test":"Test two."}],
+ "rules":[
+  {"id":"A1","family":1,"name":"Alpha","ban":"b","strings":["alpha one","alpha three"],"fix":"f","bad":"generic bad","good":"generic good"},
+  {"id":"C1","family":2,"name":"Gamma","ban":"b","strings":["gamma","gamma old"],"fix":"f","bad":"x","good":"y"},
+  {"id":"D1","family":1,"name":"Delta","ban":"b","strings":["delta"],"fix":"f","bad":"x","good":"y"}],
+ "voice_target":{"register":"Generic register.","asks":"Sam asks."}}

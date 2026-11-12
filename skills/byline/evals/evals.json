@@ -1,0 +1,73 @@
+[
+  {
+    "id": "reply-trace-renewal-facts",
+    "prompt": "Can you reply to Priya's email about the contract renewal? Yes we're still at 24 trucks and nothing's changing on our end.",
+    "files": [
+      "voice/profile.md",
+      "voice/exemplars.md",
+      "thread-renewal.txt",
+      "voice/my_real_voice.txt"
+    ],
+    "expected_output": "A short, casual email reply in the person's own voice that confirms the renewal date and the truck count exactly as the thread states them, adds nothing invented, and reads like a quick direct reply rather than a formal letter.",
+    "assertions": [
+      "The reply names 14 March as the renewal date.",
+      "The reply states 24 trucks, the number given in the source thread, and no other number in its place.",
+      "The reply has no em dash.",
+      "The reply does not open with 'I hope this finds you well' or a similar courtesy line.",
+      "The reply is under 120 words."
+    ]
+  },
+  {
+    "id": "slack-schedule-change",
+    "prompt": "hey can you tell the team the thursday standup is moving from 10am to 11am starting next week, the vendor call runs into it",
+    "files": [
+      "voice/profile.md",
+      "voice/exemplars.md",
+      "voice/my_real_voice.txt"
+    ],
+    "expected_output": "A short Slack message to the team stating the standup moves from 10am to 11am on Thursdays starting next week, in a plain direct tone matching the sample messages, with no filler opener or sign-off.",
+    "assertions": [
+      "The message says the standup moves to 11am.",
+      "The message names Thursday.",
+      "The message is 70 words or fewer.",
+      "The message has no em dash.",
+      "The message does not open with a chat-assistant phrase such as 'Certainly!' or 'Sure thing!'."
+    ]
+  },
+  {
+    "id": "polish-status-update-tells",
+    "prompt": "polish this draft before I send it",
+    "files": [
+      "voice/profile.md",
+      "voice/exemplars.md",
+      "draft-status-update.txt",
+      "voice/my_real_voice.txt"
+    ],
+    "expected_output": "The same status update with the courtesy opener, the em dash, the 'not just X, we're Y' contrast and the closing offer removed. The real content stays, including the Northwind rollout being ahead of schedule and the person's own 35% figure, unchanged.",
+    "assertions": [
+      "The polished draft has no em dash.",
+      "The polished draft does not contain the phrase 'I hope this finds you well'.",
+      "The polished draft does not use a 'not just X, we're Y' (or 'not X, but Y') contrast construction.",
+      "The polished draft drops the closing offer 'Let me know if you have questions!' and ends on the last real sentence.",
+      "The polished draft still says the Northwind rollout is ahead of schedule.",
+      "The polished draft keeps the person's own 35% figure unchanged and adds no new number."
+    ]
+  },
+  {
+    "id": "missing-fact-not-invented",
+    "prompt": "reply to Priya's email, confirm the training date and give her the new hire count she asked for",
+    "files": [
+      "voice/profile.md",
+      "voice/exemplars.md",
+      "thread-expansion.txt",
+      "voice/my_real_voice.txt"
+    ],
+    "expected_output": "A reply that confirms the training date from the source and, for the new-hire count the source never states, says plainly that it couldn't find that figure instead of making one up.",
+    "assertions": [
+      "The reply states 21 April as the training date.",
+      "The reply does not state any specific number of new hires, since the source thread never gives one.",
+      "The reply says it couldn't find or confirm the new-hire count, rather than silently skipping the question or inventing a figure.",
+      "The reply has no em dash."
+    ]
+  }
+]

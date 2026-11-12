@@ -1,0 +1,16 @@
+Byline third-party notices
+
+1. humanizer
+Source: https://github.com/blader/humanizer
+License: MIT License (full text in LICENSE)
+Copyright (c) 2025 Siqi Chen
+
+Byline is a modified version of humanizer. What changed: the writing patterns were rewritten as
+rule files with generic examples and split into shared rules and each person's own rules; check,
+review, flag and setup modes were added; and the checks were added as a separate program written
+in Go. The original copyright line and licence are kept unchanged in LICENSE.
+
+2. Wikipedia's "Signs of AI writing" guide
+The idea for Byline's pattern list comes from Wikipedia's guide "Signs of AI writing" (WikiProject
+AI Cleanup, https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing); Byline's text and
+examples are its own.

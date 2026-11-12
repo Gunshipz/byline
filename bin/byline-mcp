@@ -1,0 +1,46 @@
+#!/bin/sh
+# Execs the platform binary: it owns stdio for the MCP server, and for the
+# command-line modes (tool, version, generate) the exit code is the result.
+set -eu
+
+self=$0
+case $self in
+	*\\*) self=$(printf '%s' "$self" | tr '\\' '/') ;;
+esac
+dir=$(cd "$(dirname "$self")" && pwd)
+
+s=$(uname -s)
+m=$(uname -m)
+
+bin=""
+os=""
+case "$s" in
+	Darwin) os=darwin ;;
+	Linux) os=linux ;;
+	MINGW*|MSYS*|CYGWIN*) bin=byline-mcp.exe ;;
+esac
+
+if [ -z "$bin" ]; then
+	if [ -z "$os" ]; then
+		echo "Byline doesn't run on this kind of computer." >&2
+		exit 1
+	fi
+	arch=""
+	case "$m" in
+		arm64|aarch64) arch=arm64 ;;
+		x86_64|amd64) arch=amd64 ;;
+	esac
+	if [ -z "$arch" ]; then
+		echo "Byline doesn't run on this kind of computer." >&2
+		exit 1
+	fi
+	bin="byline-mcp-$os-$arch"
+fi
+
+path="$dir/$bin"
+if [ ! -e "$path" ]; then
+	echo "Byline's helper $path is missing. Reinstall Byline: claude plugin install byline@byline" >&2
+	exit 1
+fi
+[ -x "$path" ] || chmod +x "$path"
+exec "$path" "$@"

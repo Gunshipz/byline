@@ -1,0 +1,45 @@
+#!/bin/sh
+# Never execs: its own exit 0 must hold even when byline-mcp is missing,
+# fails, or is killed.
+
+self=$0
+case $self in
+	*\\*) self=$(printf '%s' "$self" | tr '\\' '/') ;;
+esac
+dir=$(cd "$(dirname "$self")" && pwd)
+
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+cat >"$tmp"
+
+out=$({ sh "$dir/byline-mcp" "$@" <"$tmp"; } 2>/dev/null)
+code=$?
+
+if [ "$code" -eq 0 ]; then
+	[ -n "$out" ] && printf '%s\n' "$out"
+	exit 0
+fi
+
+mode=${2:-}
+extra=0
+for a in "$@"; do
+	[ "$a" = "--extra" ] && extra=1
+done
+
+if [ "$mode" = "pre-tool" ] && [ "$extra" -eq 0 ]; then
+	send_tools="mcp__claude_ai_Microsoft_365__outlook_send_mail mcp__claude_ai_Microsoft_365__outlook_forward_mail mcp__claude_ai_Microsoft_365__outlook_send_draft mcp__claude_ai_Microsoft_365__outlook_create_draft mcp__claude_ai_Microsoft_365__outlook_create_reply_draft mcp__claude_ai_Microsoft_365__outlook_create_reply_all_draft mcp__claude_ai_Microsoft_365__outlook_update_draft mcp__claude_ai_Microsoft_365__teams_send_chat_message mcp__claude_ai_Microsoft_365__teams_send_channel_message mcp__claude_ai_Microsoft_365__teams_reply_channel_message mcp__gmail__send_email mcp__gmail__draft_email mcp__workspace-mcp__send_gmail_message mcp__workspace-mcp__draft_gmail_message mcp__slack__conversations_add_message"
+	name=$(tr ',{}' '\n\n\n' <"$tmp" | sed -n 's/^[[:space:]]*"tool_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)
+	matched=0
+	for t in $send_tools; do
+		case "$name" in
+			"$t"|mcp__plugin_*_"${t#mcp__}")
+				matched=1
+				;;
+		esac
+	done
+	if [ -z "$name" ] || [ "$matched" -eq 1 ]; then
+		printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"Byline'\''s checks couldn'\''t run, so approve this step yourself, or reinstall Byline."}}'
+	fi
+fi
+
+exit 0

@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "version": "0.9.0",
+  "families": [
+    { "id": 1, "name": "Announcing instead of saying", "test": "T1" },
+    { "id": 2, "name": "Hollow affirmation", "test": "T2" },
+    { "id": 3, "name": "Engineered rhythm", "test": "T3" },
+    { "id": 4, "name": "Abstraction dodging the plain statement", "test": "T4" },
+    { "id": 5, "name": "Manufactured work", "test": "T5" },
+    { "id": 6, "name": "Fabrication", "test": "T6" }
+  ],
+  "rules": [
+    { "id": "K1", "family": 1, "name": "Faux-candor opener", "ban": "b", "strings": ["to be honest", "honestly,"], "fix": "f", "bad": "x", "good": "y" },
+    { "id": "K4", "family": 3, "name": "Em dash", "ban": "b", "strings": ["—"], "fix": "f", "bad": "x", "good": "y" },
+    { "id": "K5", "family": 3, "name": "Negative setup", "ban": "b", "strings": ["not just about"], "fix": "f", "bad": "x", "good": "y", "structural": "not_x_but_y" },
+    { "id": "K11", "family": 5, "name": "Closing before the signature", "ban": "b", "strings": ["Thanks,\nSam", "Best,\nSam"], "fix": "f", "bad": "x", "good": "y" },
+    { "id": "K13a", "family": 3, "name": "Setup-colon-payoff", "ban": "b", "fix": "f", "bad": "x", "good": "y", "structural": "short_clause_colon_lowercase_payoff" },
+    { "id": "K13b", "family": 3, "name": "Negation litany", "ban": "b", "fix": "f", "bad": "x", "good": "y", "structural": "three_or_more_no_X" },
+    { "id": "K32", "family": 3, "name": "Doubled comparative construction", "ban": "b", "fix": "f", "bad": "x", "good": "y", "structural": "doubled_rather" },
+    { "id": "G7", "family": 4, "name": "AI vocabulary", "ban": "b", "strings": ["delve", "leverage"], "fix": "f", "bad": "x", "good": "y", "removed": ["robust"], "removed_reason": "writes it" },
+    { "id": "G16", "family": 3, "name": "Inline-header vertical list", "ban": "b", "fix": "f", "bad": "x", "good": "y", "structural": "bold_label_colon_list_item" },
+    { "id": "G17", "family": 3, "name": "Title case heading", "ban": "b", "fix": "f", "bad": "x", "good": "y", "structural": "title_case_heading" },
+    { "id": "G18", "family": 3, "name": "Emoji", "ban": "b", "fix": "f", "bad": "x", "good": "y", "structural": "emoji" },
+    { "id": "G19", "family": 3, "name": "Curly quotation marks", "ban": "b", "strings": ["“", "”", "‘", "’"], "fix": "f", "bad": "x", "good": "y", "autofix": true, "exclude_from_brief": true },
+    { "id": "K29", "family": 4, "name": "Idiom flattened into its explanation", "ban": "b", "fix": "f", "bad": "x", "good": "y", "structural": "judgment_only" },
+    { "id": "K40", "family": 4, "name": "The picture instead of the work", "ban": "b", "strings": ["the picture"], "fix": "f", "bad": "x", "good": "y", "structural": "judgment_only" },
+    { "id": "R1", "family": 1, "name": "Circle back", "ban": "b", "strings": ["circle back"], "fix": "f", "bad": "x", "good": "y", "retired": true }
+  ],
+  "voice_target": {
+    "note": "n",
+    "register": "Casual professional.",
+    "contractions": { "rule": "Use them.", "examples": ["I'm", "don't", "it's", "we're", "can't", "won't", "I'd", "that's", "you're"] },
+    "person": "We for team.",
+    "asks": "Ride the reasoning.",
+    "phrases_he_uses": ["The goal is...", "Let me know..."],
+    "punctuation": { "em_dash": "never", "colon": "lists only" },
+    "zeta_custom": "Custom key last."
+  }
+}
