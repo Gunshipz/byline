@@ -5,7 +5,7 @@
 set -eu
 
 usage() {
-	echo "usage: sync-core.sh <path-to-amazon-repo> [ref]" >&2
+	echo "usage: sync-core.sh <path-to-source-repo> [ref]" >&2
 	exit 1
 }
 
@@ -56,7 +56,7 @@ echo "$list" | while IFS= read -r rel; do
 	fi
 done
 
-# Scan every staged file for Amazon-only terms before writing anything.
+# Scan every staged file for source-only terms before writing anything.
 # shortcut: plain case-insensitive whole-word/phrase matching, no per-term
 # acronym rule like content/scrub_test.go's; widen if that causes a miss.
 leak_found=0
@@ -69,7 +69,7 @@ echo "$list" | while IFS= read -r rel; do
 	fi
 done
 if [ -f "$work/.leak" ]; then
-	echo "sync-core.sh: Amazon-only terms found, nothing written" >&2
+	echo "sync-core.sh: source-only terms found, nothing written" >&2
 	exit 1
 fi
 
