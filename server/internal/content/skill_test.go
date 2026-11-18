@@ -87,6 +87,7 @@ func TestSkill_Sections(t *testing.T) {
 		"### review",
 		"### flag",
 		"### setup",
+		"### update",
 		"## The five drafting steps",
 		"### Step 1: Load the voice files before writing a word",
 		"### Step 2: Write with them loaded",
@@ -120,8 +121,29 @@ func TestSkill_Frontmatter(t *testing.T) {
 		t.Fatal("frontmatter has a version: line")
 	}
 
-	if strings.Contains(front, "allowed-tools:") {
-		t.Fatal("frontmatter pre-approves tools; the public skill pre-approves none")
+	lines := strings.Split(front, "\n")
+	start := -1
+	for i, l := range lines {
+		if l == "allowed-tools:" {
+			start = i
+			break
+		}
+	}
+	if start < 0 {
+		t.Fatal("frontmatter has no allowed-tools: block list")
+	}
+	var entries []string
+	for _, l := range lines[start+1:] {
+		if !strings.HasPrefix(l, "  ") {
+			break
+		}
+		entries = append(entries, l)
+	}
+	// The update mode's own command, exact and host-specific, is the one
+	// thing the public skill pre-approves; nothing else.
+	want := []string{`  - "Bash(claude plugin update byline@byline)"`}
+	if !reflect.DeepEqual(entries, want) {
+		t.Fatalf("allowed-tools entries = %q, want %q", entries, want)
 	}
 }
 

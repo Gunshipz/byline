@@ -41,6 +41,15 @@ var formalDocStyle = regexp.MustCompile(`(?i)\b(6[- ]?pager|six[- ]?pager|pr[- ]
 // skips the gate too.
 var pipelineMeta = regexp.MustCompile(`(?i)\b(hook|hooks|settings\.json|pre-?tool-?use|post-?tool-?use|userpromptsubmit|gate|sentinel|matcher|enforce\w*|programmatic\w*)\b`)
 
+// bylineModeCommand matches a prompt that is itself an invocation of one of
+// Byline's own non-draft modes: the slash command is "/byline:byline" and
+// the next word is update, setup, flag, check or review. That's Byline's
+// own command, not a request to draft something, even when words later in
+// the line (or in the surrounding sentence, which this doesn't try to
+// catch) look draft-shaped. "/byline:byline" alone and "/byline:byline
+// polish" aren't in the list, so they keep counting as they do today.
+var bylineModeCommand = regexp.MustCompile(`(?i)^\s*/byline:byline\s+(update|setup|flag|check|review)\b`)
+
 // collapseSpace lowercases s and collapses every run of whitespace to a
 // single space, so an extra phrase matches regardless of case or spacing.
 func collapseSpace(s string) string {
@@ -48,14 +57,14 @@ func collapseSpace(s string) string {
 }
 
 // detectDraftIntent reports whether prompt is a request Byline should gate:
-// pipelineMeta or formalDocStyle skip it first, then draftPatterns, then
-// extraPhrases (settings.json's extra_draft_phrases), checked as a
-// whitespace- and case-insensitive substring.
+// pipelineMeta, formalDocStyle or bylineModeCommand skip it first, then
+// draftPatterns, then extraPhrases (settings.json's extra_draft_phrases),
+// checked as a whitespace- and case-insensitive substring.
 func detectDraftIntent(prompt string, extraPhrases []string) bool {
 	if prompt == "" {
 		return false
 	}
-	if pipelineMeta.MatchString(prompt) || formalDocStyle.MatchString(prompt) {
+	if pipelineMeta.MatchString(prompt) || formalDocStyle.MatchString(prompt) || bylineModeCommand.MatchString(prompt) {
 		return false
 	}
 	for _, re := range draftPatterns {

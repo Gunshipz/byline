@@ -1,9 +1,8 @@
 // Package evlog is the tiny shared helper behind Byline's two local
 // observability logs (BYLINE_HOME/logs/tool-calls.jsonl and
-// gate-decisions.jsonl, ASR "Implement Tool and Gateway Observability"
-// -- the local stand-in for a Security Events Library integration, which
-// Go doesn't have yet): append one JSON line, folder and file locked
-// down, rolled over once a log grows past its cap.
+// gate-decisions.jsonl -- a local stand-in for a central logging
+// integration, which Go doesn't have yet): append one JSON line, folder
+// and file locked down, rolled over once a log grows past its cap.
 package evlog
 
 import (

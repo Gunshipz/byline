@@ -17,10 +17,10 @@ import (
 // hookOutput is the JSON Byline writes to stdout for one hook call. Claude
 // Code reads hookSpecificOutput's fields to act on the hook, and
 // systemMessage (when set) to show the person a line of plain text.
-// logTool and logCode never reach that JSON (gate finding ASR "Implement
-// Tool and Gateway Observability"): they're decide's own record, for
-// Run's gate-decisions.jsonl line, of which tool this decision was about
-// and a short code for why -- never the reason text shown to the person.
+// logTool and logCode never reach that JSON, by design: they're decide's
+// own record, for Run's gate-decisions.jsonl line, of which tool this
+// decision was about and a short code for why -- never the reason text
+// shown to the person.
 type hookOutput struct {
 	HookSpecificOutput hookSpecific `json:"hookSpecificOutput"`
 	SystemMessage      string       `json:"systemMessage,omitempty"`

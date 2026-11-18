@@ -451,14 +451,13 @@ const maxArgStringBytes = 1 << 20 // 1 MiB
 
 // checkStringsIn walks v -- a string, or an object or array that may hold
 // strings at any depth -- rejecting the first string that isn't valid
-// UTF-8, carries a hidden-instruction character (ASR "Model Input and
-// Output Validation" / "Implement Tool Input and Response Validation": a
-// Unicode tag character or a bidirectional override/isolate can hide or
-// reorder text a person reading the draft never sees), or is longer than
-// maxArgStringBytes. name is the enclosing argument's name, for the
-// message. A zero-width joiner, zero-width non-joiner, the emoji
-// variation selector and ordinary emoji are left alone -- people's drafts
-// carry those on purpose.
+// UTF-8, carries a hidden-instruction character (a Unicode tag character
+// or a bidirectional override/isolate can hide or reorder text a person
+// reading the draft never sees), or is longer than maxArgStringBytes.
+// name is the enclosing argument's name, for the message. A zero-width
+// joiner, zero-width non-joiner, the emoji variation selector and
+// ordinary emoji are left alone -- people's drafts carry those on
+// purpose.
 func checkStringsIn(name string, v any) string {
 	switch t := v.(type) {
 	case string:

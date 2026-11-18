@@ -56,7 +56,8 @@ builds `byline-mcp` for macOS (Apple chip and Intel), Linux (x64 and arm64) and 
 
 1. Work on a branch.
 2. Bump `version` in `skills/byline/skill.json` and `.claude-plugin/plugin.json`, and add a `CHANGELOG.md` entry headed with the new version. Raise `requires_helper` only when the skill needs something an older helper refuses to do.
-3. Run `sh server/scripts/embed.sh`, then `sh server/scripts/build.sh bin`.
-4. Run `(cd server && go test ./...)` and expect exit 0. If you keep private fixtures, also run `(cd server && BYLINE_PRIVATE_FIXTURES=<folder> go test ./internal/content/ -run TestSharedPart_NoScrubTerms -v)` and expect PASS, not SKIP.
-5. Run `claude plugin validate .` and expect no errors.
-6. Merge, then tag the release: `claude plugin tag .`.
+3. Write `docs/release-notes/<version>.md` for this copy's readers, in the same plain style as the ones already there, and free of anything company-internal.
+4. Run `sh server/scripts/embed.sh`, then `sh server/scripts/build.sh bin`.
+5. Run `(cd server && go test ./...)` and expect exit 0. If you keep private fixtures, also run `(cd server && BYLINE_PRIVATE_FIXTURES=<folder> go test ./internal/content/ -run TestSharedPart_NoScrubTerms -v)` and expect PASS, not SKIP.
+6. Run `claude plugin validate .` and expect no errors.
+7. Merge, then tag the release: `claude plugin tag .`.

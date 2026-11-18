@@ -1,6 +1,8 @@
 ---
 name: byline
 description: Writes and checks email, Slack messages, replies and announcements in the person's own voice, from their rules, profile and sample messages, tracing every fact to its source and checking the structure before anything is sent. Use for a new message, a reply, polishing a draft, or checking or reviewing someone else's text. Also handles "flag this phrase" and first-time setup. Not for long formal documents such as design documents, post-mortems, or a recurring status report filed in a standard template.
+allowed-tools:
+  - "Bash(claude plugin update byline@byline)"
 ---
 
 # Byline
@@ -37,6 +39,7 @@ When a step names one of these sentences, say it word for word, with the capital
 8. Say: "I didn't find anything to change."
 9. Say: "Here's the message for RECIPIENT. Should I post it?"
 10. Say: "I couldn't find a source for ITEM, so I left it out."
+11. Say: "Byline is updated to VERSION. Restart Claude Code to start using it."
 
 ## Start every run with the status check
 
@@ -51,7 +54,7 @@ At any point, if a tool named here is missing or rejects an argument this file t
 
 ## Modes
 
-The first word of the skill's argument picks the mode: write (the default, also used when there's no argument), polish, check, review, flag or setup. The person types `/byline:byline`, `/byline:byline polish`, `/byline:byline check`, `/byline:byline review`, `/byline:byline flag` or `/byline:byline setup`; when they just ask in words, pick the mode that fits what they asked for. Slash commands are fine to say to the person, because they type them.
+The first word of the skill's argument picks the mode: write (the default, also used when there's no argument), polish, check, review, flag, setup or update. The person types `/byline:byline`, `/byline:byline polish`, `/byline:byline check`, `/byline:byline review`, `/byline:byline flag`, `/byline:byline setup` or `/byline:byline update`; when they just ask in words, pick the mode that fits what they asked for. Slash commands are fine to say to the person, because they type them.
 
 ### write
 
@@ -91,6 +94,14 @@ Never ban a word the person writes.
 6. Show the profile and samples (Say 4), and save with the setup save tool only on a yes, passing the sign-off block as signature_lines. If the save tool refuses for too few words, tell the person how many it found and ask whether to save anyway; only on their yes, save again with `accept_fewer_words`. If the save result says it left messages out, tell the person how many, because they looked drafted, before Say 5.
 7. The save tool switches off the general phrases the person writes. Report them with Say 5; if there are none, end it after "set up".
 8. Look at the tools this app has. If any of them sends, replies to, forwards, schedules, edits or saves a draft of an email or chat message, and the read-settings tool doesn't already list it, add them all with the save-settings tool in one call, so Byline's send checks cover them. Tell the person in one sentence which apps Byline now checks.
+
+### update
+
+1. Say the version the status check reported.
+2. Run `claude plugin update byline@byline`.
+3. If its output says the plugin isn't installed, this copy wasn't installed the usual way and can't update itself: say so in one sentence, and give the two install commands under "Claude Code" in `references/install-and-hosts.md`.
+4. Otherwise, give Say 11, with the version its own output reports for VERSION. Never guess VERSION from the command's name.
+5. If the command fails for another reason, relay its error in one plain sentence and stop. Don't retry it with other flags.
 
 ## The five drafting steps
 

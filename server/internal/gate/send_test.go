@@ -301,9 +301,10 @@ func TestPreTool_SendDecisions(t *testing.T) {
 }
 
 // TestPreTool_C1_ExpandedSlackToolsGetSendChecks reproduces C1's failing
-// input: an armed session, nothing read, and one of slack-mcp's other
-// posting, scheduling, editing or draft tools carrying unchecked content
-// to a person. Before the fix none of these printed anything at all.
+// input: an armed session, nothing read, and one of the Slack server's
+// other posting, scheduling, editing or draft tools carrying unchecked
+// content to a person. Before the fix none of these printed anything at
+// all.
 func TestPreTool_C1_ExpandedSlackToolsGetSendChecks(t *testing.T) {
 	newHome(t)
 	for _, tool := range []string{

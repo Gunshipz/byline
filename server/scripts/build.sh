@@ -1,8 +1,9 @@
 #!/bin/sh
 set -eu
 
-# GOTOOLCHAIN=local stops Go downloading a toolchain inside Brazil, and
-# -buildvcs=false stops the build failing on a checkout without git.
+# GOTOOLCHAIN=local stops Go downloading a toolchain in a build sandbox
+# with no outbound network access, and -buildvcs=false stops the build
+# failing on a checkout without git.
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$script_dir/../.." && pwd)

@@ -37,8 +37,9 @@ func TestSettings_TemplateMatchesDefaults(t *testing.T) {
 }
 
 // TestDefaultSendTools_C1_IncludesSlackPostingSuite reproduces C1: the
-// defaults covered only slack-mcp's post_message, so its other posting,
-// scheduling, editing and draft tools got no ask and no structure check.
+// defaults covered only the Slack server's post_message, so its other
+// posting, scheduling, editing and draft tools got no ask and no
+// structure check.
 func TestDefaultSendTools_C1_IncludesSlackPostingSuite(t *testing.T) {
 	for _, want := range []string{
 		"mcp__slack__conversations_add_message",

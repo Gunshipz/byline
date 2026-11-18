@@ -2,7 +2,12 @@
 
 What changed in each version of Byline, in plain English.
 
-## 1.0.2 (not released yet)
+## 1.0.3 (18 Nov 2026)
+
+- You can now type `/byline:byline update` to update Byline itself. It says the version you're on, runs the update, and tells you to restart Claude Code.
+- Byline's own commands — `/byline:byline update`, `setup`, `flag`, `check` and `review` — are no longer mistaken for a request to write a message.
+
+## 1.0.2 (18 Nov 2026)
 
 - Setup now starts on your very first message, whatever it says, instead of waiting for you to ask for a draft or tell Claude to set it up. You still get asked, and get to say no.
 - The session-start message no longer tells you to ask Claude to set up Byline; it just says setup will start with your first message (or, if files are missing, that something needs fixing).

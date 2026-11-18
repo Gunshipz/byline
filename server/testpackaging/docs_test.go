@@ -112,3 +112,25 @@ func TestVersion_ChangelogTopEntryIsCurrentVersion(t *testing.T) {
 		t.Fatalf("CHANGELOG.md top entry version = %q, want %q (skill.json version)", fields[1], version)
 	}
 }
+
+// TestReleaseNotes_CurrentVersionHasNotes: every release ships
+// docs/release-notes/<version>.md for this copy's readers (release
+// checklist step 3), and this copy's notes stay free of anything
+// company-internal. The scanned-for word is split, the way
+// content.TestSharedPart_NoCompanyHosts splits it, so this file doesn't
+// match itself.
+func TestReleaseNotes_CurrentVersionHasNotes(t *testing.T) {
+	root := repoRoot(t)
+	version := skillVersion(t, root)
+	data, err := os.ReadFile(filepath.Join(root, "docs", "release-notes", version+".md"))
+	if err != nil {
+		t.Fatalf("no release notes for %s: %v", version, err)
+	}
+	if !strings.HasPrefix(string(data), "# Byline "+version+"\n") {
+		t.Fatalf("release notes for %s must open with %q", version, "# Byline "+version)
+	}
+	companyWord := "ama" + "zon"
+	if strings.Contains(strings.ToLower(string(data)), companyWord) {
+		t.Fatalf("release notes for %s name a company-internal system; this copy's notes never do", version)
+	}
+}

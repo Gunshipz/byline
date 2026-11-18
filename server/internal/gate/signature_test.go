@@ -124,8 +124,8 @@ func TestBestCoverage_TieUsesFewerUnmatched(t *testing.T) {
 }
 
 // A body line that only starts like a job title ("Manager, ...") is
-// message, not signature: new lines after it still count (AutoSDE, CR
-// review of 1.0.1).
+// message, not signature: new lines after it still count (caught in
+// code review of 1.0.1).
 func TestPreTool_TitleLineInBodyIsNotASignature(t *testing.T) {
 	newHome(t)
 	withSignatureLines(t, "The Sender")

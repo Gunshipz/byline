@@ -50,6 +50,44 @@ func TestDetectDraftIntent_SkipsComeFirst(t *testing.T) {
 	}
 }
 
+// Several of these would also arm the gate on text alone (pattern 1, via a
+// draft-shaped word after the mode name), which is what actually proves the
+// new skip does the work rather than the prompt just missing every pattern
+// on its own.
+func TestDetectDraftIntent_BylineModeCommandsSkip(t *testing.T) {
+	for _, p := range []string{
+		"/byline:byline update",
+		"/byline:byline update now please",
+		"/byline:byline update create a message explaining this to the team",
+		"/byline:byline setup",
+		"/byline:byline setup create a quick email for onboarding",
+		"/byline:byline flag this phrase",
+		"/byline:byline check write a reply to the vendor",
+		"/byline:byline review draft a response for the customer",
+		"  /byline:byline UPDATE",
+		"/BYLINE:BYLINE update create an announcement",
+	} {
+		if detectDraftIntent(p, nil) {
+			t.Errorf("%q: /byline:byline's own mode command must skip", p)
+		}
+	}
+}
+
+func TestDetectDraftIntent_BylineModeSkipDoesNotWiden(t *testing.T) {
+	// "/byline:byline" and "/byline:byline polish" must keep today's
+	// result: neither one is a draft request now, and the new skip must
+	// not touch that.
+	for _, p := range []string{"/byline:byline", "/byline:byline polish"} {
+		if detectDraftIntent(p, nil) {
+			t.Errorf("%q: must not newly count as a draft request", p)
+		}
+	}
+	// A plain writing request must keep arming the gate, same as before.
+	if !detectDraftIntent("draft a quick note for the vendor", nil) {
+		t.Error("a plain writing request must still count as a draft request")
+	}
+}
+
 func TestDetectDraftIntent_NoTeamNamesByDefault(t *testing.T) {
 	if detectDraftIntent("tell the vendor the plan", nil) {
 		t.Error("a bare 'tell <someone>' must not arm by default")

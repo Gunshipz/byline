@@ -207,13 +207,12 @@ func TestServer_BooleanAndArrayTypeErrorsUsePlanWording(t *testing.T) {
 	}
 }
 
-// ASR "Model Input and Output Validation" / "Implement Tool Input and
-// Response Validation": checkArgs must also reject a string argument that
-// hides instructions from a person reading it -- invalid UTF-8, a Unicode
-// tag character, or a bidirectional override/isolate control -- whether
-// the string is a top-level argument or nested inside an object or array
-// one. A cap stops an argument too long to be a real one. Ordinary
-// emoji, including a ZWJ sequence, must still pass.
+// checkArgs must also reject a string argument that hides instructions
+// from a person reading it -- invalid UTF-8, a Unicode tag character, or
+// a bidirectional override/isolate control -- whether the string is a
+// top-level argument or nested inside an object or array one. A cap
+// stops an argument too long to be a real one. Ordinary emoji, including
+// a ZWJ sequence, must still pass.
 
 // TestCheckArgs_RejectsInvalidUTF8 builds the args map directly rather
 // than through JSON: encoding/json already replaces invalid UTF-8 with

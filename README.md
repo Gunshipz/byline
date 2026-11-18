@@ -53,7 +53,7 @@ It keeps two local logs under `~/.byline/logs/`: a line per tool call, and a lin
 
 ## Updating
 
-Quit Claude Code, then run `claude plugin update byline@byline`.
+Ask Claude Code: `/byline:byline update` checks your version and installs the newest one for you, then tells you to restart. To do it yourself instead: quit Claude Code, then run `claude plugin update byline@byline`.
 
 ## Turning it off
 
