@@ -30,6 +30,12 @@ and commit the refreshed copies under `server/embed/`. `TestEmbed_CommittedCopie
 - `.claude-plugin/`, `.mcp.json`, `hooks/hooks.json`: how Claude Code finds and wires in the plugin.
 - `docs/security-runbook.md`: what the two local logs hold.
 
+## Shared files
+
+`scripts/core-files.txt` lists files that come from this project's main source and are kept byte-for-byte identical here. Don't edit them directly in this repo: `TestCoreFiles_MatchStamp` fails if a listed file's content no longer matches the sha256 `scripts/sync-core.sh` recorded for it in `scripts/core-files.sha256`. Change the source instead, then re-run the sync.
+
+A file joins the list once its audience-specific part is split out into a file that lives only in one copy, so the rest of the file reads the same in both. Then it's added to `scripts/core-files.txt`, and `scripts/sync-core.sh` is run to pick it up.
+
 ## Building
 
 ```
