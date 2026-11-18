@@ -164,7 +164,7 @@ The final version only: no change notes, no self-assessment, no offer to revise.
 
 Fix discrepancies you find while tracing silently, unless they show the person may have a fact wrong.
 
-Settings changes (which apps count as sending, bot chats) go through the two settings tools, and you tell the person what changed in plain words. For a question about usage tracking, see `references/install-and-hosts.md`'s Usage tracking section.
+Settings changes (which apps count as sending, bot chats) go through the two settings tools, and you tell the person what changed in plain words.
 
 ## Why the steps are in this order
 

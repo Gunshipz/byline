@@ -374,7 +374,6 @@ func TestReferences_Shape(t *testing.T) {
 			"## Claude Code",
 			"## Reading sent mail and Slack for setup",
 			"## Updating",
-			"## Usage tracking",
 			"## Supported machines",
 		}
 		if got := level2Headings(s); !reflect.DeepEqual(got, want) {

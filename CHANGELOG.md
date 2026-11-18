@@ -2,6 +2,10 @@
 
 What changed in each version of Byline, in plain English.
 
+## 1.0.4 (18 Nov 2026)
+
+- Docs no longer talk about usage tracking. Byline never had any; the wording just said so, and it's gone now.
+
 ## 1.0.3 (18 Nov 2026)
 
 - You can now type `/byline:byline update` to update Byline itself. It says the version you're on, runs the update, and tells you to restart Claude Code.

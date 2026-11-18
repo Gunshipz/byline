@@ -53,10 +53,6 @@ Keep only the person's own words from what comes back: drop quoted replies, forw
 
 Quit Claude Code first, then run `claude plugin update byline@byline` in a terminal, and reopen it.
 
-## Usage tracking
-
-Byline counts nothing and sends nothing anywhere. It keeps two local logs on this computer, under the voice folder's `logs` folder: one line per tool call and one line per send-check decision, never holding message text. Answer only if asked, in those plain words.
-
 ## Supported machines
 
 macOS on Apple chip and Intel, Windows x64 (with Git for Windows installed), and Linux on x64 and arm64.

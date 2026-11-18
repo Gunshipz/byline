@@ -62,7 +62,7 @@ func TestDocs_RequiredSections(t *testing.T) {
 	}{
 		{"README.md", []string{
 			"## Install", "## What it checks", "## First run",
-			"## Privacy and usage tracking", "## Known limitations", "## Updating",
+			"## Privacy", "## Known limitations", "## Updating",
 			"claude plugin marketplace add gunshipz/byline", "claude plugin install byline@byline",
 			"~/.byline/", "Git for Windows",
 		}},
