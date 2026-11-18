@@ -31,6 +31,7 @@ Byline's helper comes inside the plugin. Each capability in SKILL.md's Tools tab
 | `byline_setup_save` | `exemplars` | required | the sample messages text to save |
 | `byline_setup_save` | `real_voice` | required | the real-voice sample text to save, scored for the baseline |
 | `byline_setup_save` | `signature_lines` | optional | the person's own sign-off block, so checks can cut it out |
+| `byline_setup_save` | `accept_fewer_words` | optional | saves below the minimum word count anyway; pass only after telling the person how many words were found and getting their yes |
 | `byline_settings_read` | (none) | – | no arguments; reads Byline's saved settings |
 | `byline_settings_save` | `send_tools` | optional | the list of tool names Byline's send checks cover |
 | `byline_settings_save` | `exempt_channels` | optional | channel ids exempt from the send check |

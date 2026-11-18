@@ -45,7 +45,7 @@ Call the status check before anything else, the way `references/install-and-host
 - **It can't be reached.** Stop, and never improvise a check of your own. Give Say 2, install Byline as that file says, and start again after the restart.
 - **It carries an update notice.** The helper is too old. Relay its own sentence word for word.
 - **A voice file is missing** (the brief, the profile or the samples). Give Say 3 and stop. In setup mode, carry on with setup instead, because setup rebuilds them.
-- **Setup hasn't run.** Give Say 1 once per conversation, and draft with the general rules whether or not they answer. Never hold a draft back for setup.
+- **Setup hasn't run.** Give Say 1 at the start of the first run in a conversation. On a yes, run setup, then do the request. On a no, draft with the general rules, and don't ask again that conversation.
 
 At any point, if a tool named here is missing or rejects an argument this file tells you to send, stop. Don't work around it.
 
@@ -85,10 +85,10 @@ Never ban a word the person writes.
 
 1. Before reading anything, give the privacy facts if setup wasn't offered through Say 1: the AI model reads the messages to build the profile, and nothing is saved or sent anywhere except the voice folder on this computer. Never say that nothing leaves the machine.
 2. Work out who the person is from the computer login. Ask only if every lookup fails.
-3. Read their own sent mail and Slack messages with the email and Slack reader in `references/install-and-hosts.md`, until you have about 4,000 words. Some mail tools mark a message as read when they open it, so before opening the first one, ask the person once whether you may, and never change a message's read state. Keep only their own words: drop quoted replies, forwarded text, and other people's messages in a thread. Set their own sign-off block aside separately, word for word, as signature_lines, and drop it from the sample text itself. If that fails, use messages they paste, or a folder of `.txt` or `.eml` files.
+3. Read their own sent mail and Slack messages with the email and Slack reader in `references/install-and-hosts.md`, until you have about 4,000 words. Some mail tools mark a message as read when they open it, so before opening the first one, ask the person once whether you may, and never change a message's read state. Keep only their own words: drop quoted replies, forwarded text, and other people's messages in a thread. Skip messages that read like they were drafted by an assistant, such as status reports with headings or bullet lists. Set their own sign-off block aside separately, word for word, as signature_lines, and drop it from the sample text itself. If that fails, use messages they paste, or a folder of `.txt` or `.eml` files. If you can't find at least 1,000 words (a new hire, for example), read what there is and carry on; the save tool tells you the count.
 4. Draft the profile under the section names the profile template lists. Pick 6 to 9 messages word for word as samples, varied by kind (announcement, ask, reply, pushback, praise). Never invent or tidy a sample.
 5. Put everything you collected into the real-voice text, one message after another, with a line holding only `---` between messages. Measure the voice numbers with the calibrate tool.
-6. Show the profile and samples (Say 4), and save with the setup save tool only on a yes, passing the sign-off block as signature_lines.
+6. Show the profile and samples (Say 4), and save with the setup save tool only on a yes, passing the sign-off block as signature_lines. If the save tool refuses for too few words, tell the person how many it found and ask whether to save anyway; only on their yes, save again with `accept_fewer_words`. If the save result says it left messages out, tell the person how many, because they looked drafted, before Say 5.
 7. The save tool switches off the general phrases the person writes. Report them with Say 5; if there are none, end it after "set up".
 8. Look at the tools this app has. If any of them sends, replies to, forwards, schedules, edits or saves a draft of an email or chat message, and the read-settings tool doesn't already list it, add them all with the save-settings tool in one call, so Byline's send checks cover them. Tell the person in one sentence which apps Byline now checks.
 

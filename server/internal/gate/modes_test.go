@@ -166,6 +166,22 @@ func TestSessionStart_Warnings(t *testing.T) {
 	}
 }
 
+// TestSessionStart_WordingNeverTellsPersonToAskClaude pins the new
+// session-start wording: neither the missing-files nor the template-profile
+// case tells the person to ask Claude to set up Byline, and the
+// template-profile case instead says setup starts from their first
+// message.
+func TestSessionStart_WordingNeverTellsPersonToAskClaude(t *testing.T) {
+	for _, msg := range []string{missingSystemMessage, templateSystemMessage} {
+		if strings.Contains(msg, "Ask Claude") {
+			t.Errorf("session-start wording still tells the person to ask Claude: %q", msg)
+		}
+	}
+	if !strings.Contains(templateSystemMessage, "first message") {
+		t.Errorf("templateSystemMessage doesn't say setup starts from the first message: %q", templateSystemMessage)
+	}
+}
+
 // TestSessionStart_VoiceFolderErrorNamesCause is I4: when the voice folder
 // exists but EnsureVoiceFolder can't use it -- here, a cut-off
 // my-rules.json -- session start must say that, not send an already
@@ -247,6 +263,39 @@ func TestPrompt_ExtraDraftPhrases(t *testing.T) {
 	hook(t, "prompt", map[string]any{"session_id": "s", "prompt": "tell the vendor the plan"})
 	if !isArmed("s") {
 		t.Fatal("a phrase from settings must arm")
+	}
+}
+
+// TestPrompt_SetupOffer covers the autostart behavior: while setup hasn't
+// run, the first real prompt of a session gets setupOfferContext, once per
+// session, whatever the prompt asks; setup being done, or the session
+// already having been offered once, or a machine turn, all get nothing
+// extra.
+func TestPrompt_SetupOffer(t *testing.T) {
+	newHome(t)
+	template := []byte("<!-- byline template: setup replaces this file -->\n# Profile\n")
+	os.WriteFile(paths.ProfilePath(), template, 0o600)
+
+	o, _ := hook(t, "prompt", map[string]any{"session_id": "s", "prompt": "what's the capital of France"})
+	if o.HookSpecificOutput.AdditionalContext != setupOfferContext {
+		t.Fatalf("first prompt, setup not done: got %+v", o)
+	}
+
+	if _, raw := hook(t, "prompt", map[string]any{"session_id": "s", "prompt": "what's the weather like"}); raw != "" {
+		t.Fatalf("second prompt, same session: want silence, got %q", raw)
+	}
+
+	os.WriteFile(paths.ProfilePath(), []byte("# Profile\nActually set up now.\n"), 0o600)
+	if _, raw := hook(t, "prompt", map[string]any{"session_id": "s2", "prompt": "what's the weather like"}); raw != "" {
+		t.Fatalf("setup done: want nothing extra, got %q", raw)
+	}
+
+	os.WriteFile(paths.ProfilePath(), template, 0o600)
+	if _, raw := hook(t, "prompt", map[string]any{"session_id": "s3", "prompt": "<task-notification>what's the weather</task-notification>"}); raw != "" {
+		t.Fatalf("machine turn: want nothing, got %q", raw)
+	}
+	if setupOffered(sessionSlug("s3")) {
+		t.Fatal("a machine turn must not mark setup as offered")
 	}
 }
 

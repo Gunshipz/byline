@@ -220,7 +220,7 @@ func sessionStart(raw []byte) *hookOutput {
 		return addContext("SessionStart", missingContext(missing), missingSystemMessage)
 	}
 
-	if b, err := os.ReadFile(paths.ProfilePath()); err == nil && strings.HasPrefix(string(b), setupTemplateMarker) {
+	if setupNotDone() {
 		return addContext("SessionStart", templateContext, templateSystemMessage)
 	}
 
@@ -233,6 +233,14 @@ func sessionStart(raw []byte) *hookOutput {
 	return nil
 }
 
+// setupNotDone reports whether profile.md still starts with the setup
+// template marker -- the one check sessionStart already used to warn that
+// setup hasn't run, now shared with prompt's first-message setup offer.
+func setupNotDone() bool {
+	b, err := os.ReadFile(paths.ProfilePath())
+	return err == nil && strings.HasPrefix(string(b), setupTemplateMarker)
+}
+
 // settingsProblemMessage names, in one plain line, why settings.json
 // couldn't be read, for sessionStart to show when gateSettings's silent
 // fallback (M3) needs explaining.
@@ -241,9 +249,14 @@ func settingsProblemMessage(err error) string {
 		"Fix settings.json, or ask Claude to redo setup, to restore them.", err)
 }
 
-// prompt runs on Claude Code's UserPromptSubmit hook: a draft request from
-// the person (never a machine turn) arms the session and injects the
-// reading and checking instructions every draft needs.
+// prompt runs on Claude Code's UserPromptSubmit hook: a real turn from the
+// person (never a machine turn, isMachineTurn) can add two independent
+// pieces of context. While setup hasn't run (setupNotDone), the first
+// prompt of a session gets setupOfferContext, once per session (the
+// setup-offered mark); it fires whatever the message asks, not only a
+// draft request. A draft request also arms the session and gets
+// promptContext, exactly as before. Either, both or neither may apply, so
+// they're joined when both do.
 func prompt(raw []byte) *hookOutput {
 	p, ok := parsePayload(raw)
 	if !ok {
@@ -256,13 +269,26 @@ func prompt(raw []byte) *hookOutput {
 	if isMachineTurn(text) {
 		return nil
 	}
-	if !detectDraftIntent(text, gateSettings().ExtraDraftPhrases) {
+
+	slug := sessionSlug(str(field(p, "session_id", "sessionId")))
+
+	var contexts []string
+	if setupNotDone() && slug != "" && !setupOffered(slug) {
+		markSetupOffered(slug)
+		contexts = append(contexts, setupOfferContext)
+	}
+
+	if detectDraftIntent(text, gateSettings().ExtraDraftPhrases) {
+		if slug != "" {
+			arm(slug)
+		}
+		contexts = append(contexts, promptContext())
+	}
+
+	if len(contexts) == 0 {
 		return nil
 	}
-	if slug := sessionSlug(str(field(p, "session_id", "sessionId"))); slug != "" {
-		arm(slug)
-	}
-	return addContext("UserPromptSubmit", promptContext(), "")
+	return addContext("UserPromptSubmit", strings.Join(contexts, "\n\n"), "")
 }
 
 // read runs on Claude Code's PostToolUse hook for Read: it records that a

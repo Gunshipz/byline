@@ -48,6 +48,12 @@ func readMarkFile(slug, key string) string {
 	return filepath.Join(paths.StateDir(), slug+".read-"+key)
 }
 
+// setupOfferedFile names the mark that records prompt has already added
+// its setup-offer context to this session, so it fires once per session.
+func setupOfferedFile(slug string) string {
+	return filepath.Join(paths.StateDir(), slug+".setup-offered")
+}
+
 // writeStateFile creates the state folder (0o700) and writes data to path
 // (0o600). It ignores every error, per the state layout's contract.
 func writeStateFile(path string, data []byte) {
@@ -98,6 +104,25 @@ func hasRead(slug, key string) bool {
 	return fileExists(readMarkFile(slug, key))
 }
 
+// markSetupOffered records that this session's first prompt has already
+// added prompt's setup-offer context, so later prompts in the same
+// session don't repeat it. Does nothing when slug is empty.
+func markSetupOffered(slug string) {
+	if slug == "" {
+		return
+	}
+	writeStateFile(setupOfferedFile(slug), nil)
+}
+
+// setupOffered reports whether markSetupOffered(slug) has been called and
+// not since reset.
+func setupOffered(slug string) bool {
+	if slug == "" {
+		return false
+	}
+	return fileExists(setupOfferedFile(slug))
+}
+
 // resetSession clears a session's armed mark and its three read marks, on
 // startup and clear.
 func resetSession(slug string) {
@@ -105,17 +130,19 @@ func resetSession(slug string) {
 		return
 	}
 	os.Remove(armedFile(slug))
+	os.Remove(setupOfferedFile(slug))
 	for _, key := range []string{"brief", "profile", "exemplars"} {
 		os.Remove(readMarkFile(slug, key))
 	}
 }
 
 // isSessionMark reports whether name is one of the gate's own session
-// marks under paths.StateDir(): an armed file (slug+".armed") or a read
-// mark (slug+".read-"+key). pruneState touches only these, never another
-// file something else in Byline put in state/, such as rules-saved (M1).
+// marks under paths.StateDir(): an armed file (slug+".armed"), a read
+// mark (slug+".read-"+key), or a setup-offered file (slug+".setup-offered").
+// pruneState touches only these, never another file something else in
+// Byline put in state/, such as rules-saved (M1).
 func isSessionMark(name string) bool {
-	return strings.HasSuffix(name, ".armed") || strings.Contains(name, ".read-")
+	return strings.HasSuffix(name, ".armed") || strings.Contains(name, ".read-") || strings.HasSuffix(name, ".setup-offered")
 }
 
 // pruneDir removes every entry in dir older than maxAge for which

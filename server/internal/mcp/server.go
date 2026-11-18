@@ -231,7 +231,7 @@ func (s *Server) handleInitialize(id, params any) map[string]any {
 		"protocolVersion": pv,
 		"capabilities":    map[string]any{"tools": map[string]any{"listChanged": false}},
 		"serverInfo":      map[string]any{"name": "byline-mcp", "version": version.Version()},
-		"instructions":    "Byline's writing checks and the person's voice folder. Call byline_status first; if it returns update_notice, pass that sentence to the person once, word for word.",
+		"instructions":    "Byline's writing checks and the person's voice folder. Call byline_status at the start of every conversation; if it returns update_notice, pass that sentence to the person once, word for word. Separately, if setup_done is false, load the byline skill and give its setup offer before anything else.",
 	})
 }
 

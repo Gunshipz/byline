@@ -13,10 +13,20 @@ const (
 	malformedDenyReason   = "Byline couldn't read this request, so it stopped it to be safe. Try again; if it keeps happening, reinstall Byline."
 	crashAskReason        = "Byline's checks couldn't run, so approve this step yourself, or reinstall Byline." // M5: also fits a polish step, and ends with a period.
 	setupTemplateMarker   = "<!-- byline template"
-	missingSystemMessage  = "Byline isn't set up yet, so its writing checks have nothing to work from. Ask Claude to set up Byline."
-	templateSystemMessage = "Byline hasn't learned your writing voice yet. Ask Claude to set up Byline."
-	templateContext       = "Byline is still using blank templates: the person hasn't run setup, so drafts won't sound like them yet. The first time they ask for a draft, offer setup once."
+	missingSystemMessage  = "Byline isn't set up yet, so its writing checks have nothing to work from."
+	templateSystemMessage = "Byline hasn't learned your writing voice yet. It'll learn it from your first message."
+	templateContext       = "Byline is still using blank templates: the person hasn't run setup, so drafts won't sound like them yet. Their next message will trigger Byline's own setup offer."
 )
+
+// setupOfferContext is the context prompt adds on the first real prompt of
+// a session while setup hasn't run (setupNotDone), once per session
+// (state.go's setup-offered mark): it tells Claude to offer setup before
+// handling whatever the message asks, whatever that is. This keeps exactly
+// one yes from the person before Byline ever reads their mail, so it never
+// skips straight to reading.
+const setupOfferContext = "Byline hasn't learned this person's voice yet, and this is the first message of the conversation. " +
+	"Before doing anything else with it, load the byline skill and follow its rule for when setup hasn't run: give Say 1, then act on the answer -- " +
+	"on a yes, run setup before this request; on a no, handle this request under the general rules, and don't offer again this conversation."
 
 // promptContext is the context UserPromptSubmit injects on a draft request:
 // what to read, and the checks a send must pass.

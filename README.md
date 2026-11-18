@@ -36,7 +36,7 @@ Out of the box, Byline knows the Outlook and Teams tools in Claude's Microsoft 3
 
 ## First run
 
-The first time, Byline offers to learn your voice. If you say yes, it reads about 4,000 words of your own sent email and Slack messages, through whatever email and Slack tools you've connected to Claude Code, and shows you the profile it built before saving anything. If you haven't connected any, paste some of your messages, or point it to a folder of `.txt` or `.eml` files. The AI model reads the messages to build the profile; nothing is saved anywhere except your voice folder, `~/.byline/`.
+Byline offers to learn your voice as soon as you send your first message, whatever it is. If you say yes, it reads about 4,000 words of your own sent email and Slack messages, through whatever email and Slack tools you've connected to Claude Code, and shows you the profile it built before saving anything; if you say no, it drops the question for the rest of that conversation. If you haven't connected any, paste some of your messages, or point it to a folder of `.txt` or `.eml` files. If it finds fewer than 1,000 words (a new hire, for example), it says how many it found and asks before saving. It also leaves out messages that read like an assistant drafted them, such as status reports with headings or bullet lists, and tells you how many. The AI model reads the messages to build the profile; nothing is saved anywhere except your voice folder, `~/.byline/`.
 
 ## Privacy and usage tracking
 

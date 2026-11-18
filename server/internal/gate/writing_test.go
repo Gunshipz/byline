@@ -173,7 +173,9 @@ func TestGate_FreshInstallTemplatesDoNotDeadlock(t *testing.T) {
 				t.Fatalf("session start did not create %s", f.name)
 			}
 		}
-		if o, _ := hook(t, "prompt", draft); o.HookSpecificOutput.AdditionalContext != promptContext() {
+		// The profile is still templated, so this first prompt also carries
+		// setupOfferContext alongside promptContext (joined by "\n\n").
+		if o, _ := hook(t, "prompt", draft); !strings.Contains(o.HookSpecificOutput.AdditionalContext, promptContext()) {
 			t.Fatalf("prompt: got %+v", o)
 		}
 		if o, _ := hook(t, "pre-tool", polish("f")); dec(o) != "deny" {

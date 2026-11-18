@@ -256,6 +256,28 @@ func firstCoreStringRule(t *testing.T) rules.Rule {
 	return rules.Rule{}
 }
 
+// firstTwoCoreStringRules returns the first two distinct active core
+// rules that each have at least one banned string, for a test that needs
+// one message to trip 2 distinct core rules at once.
+func firstTwoCoreStringRules(t *testing.T) (rules.Rule, rules.Rule) {
+	t.Helper()
+	set, err := rules.Load(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out []rules.Rule
+	for _, r := range set.Core() {
+		if !r.Retired && len(r.Strings) > 0 {
+			out = append(out, r)
+			if len(out) == 2 {
+				return out[0], out[1]
+			}
+		}
+	}
+	t.Fatal("core rules has fewer than 2 active rules with strings")
+	return rules.Rule{}, rules.Rule{}
+}
+
 // firstRetiredCoreRule returns the first retired core rule, skipping the
 // test when core has none.
 func firstRetiredCoreRule(t *testing.T) rules.Rule {

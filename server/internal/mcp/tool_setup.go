@@ -3,6 +3,7 @@ package mcp
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -16,6 +17,19 @@ import (
 // calibration corpus holds fewer than 3 messages of 40 or more words
 // (voice.Calibrate's minCalibrateWords rule).
 const needThreeMessagesMsg = "Byline needs at least 3 of your messages of 40 words or more to measure your voice, separated by lines of ---. Add more and try again."
+
+// minSetupWords is the floor byline_setup_save refuses to save a
+// real-voice sample under, unless told accept_fewer_words: for someone who
+// doesn't have that much writing yet, such as a new hire.
+const minSetupWords = 1000
+
+// underMinimumMsg is the one plain sentence for a real-voice sample under
+// minSetupWords words: byline_setup_save's refusal (unless told
+// accept_fewer_words), and byline_calibrate's preview note, which never
+// refuses.
+func underMinimumMsg(words int) string {
+	return fmt.Sprintf("Byline found only %d words of real writing, fewer than the %d it needs to learn a voice well, so read more of the person's sent mail and Slack, or use messages they paste or a folder of saved messages.", words, minSetupWords)
+}
 
 // switchOff is one core rule's string a calibration corpus fires on: a
 // candidate for byline_calibrate's preview, and for byline_setup_save to
@@ -33,28 +47,116 @@ type hit struct {
 	Line   int    `json:"line"`
 }
 
-// measure scores a calibration corpus, shared by byline_calibrate and
-// byline_setup_save: the word count of its messages (the --- separators
-// excluded), the voice_target baseline voice.Calibrate derives from it,
-// every core string-rule hit (one entry per distinct rule+string, with
-// how many lines it hit), and every still-active personal rule hit. err
-// is the three-messages sentence when there aren't at least 3 messages.
-func measure(corpus string, set *rules.Set) (words int, target map[string]any, coreHits []switchOff, personalHits []hit, err error) {
-	target = runVoiceCalibrate(corpus)
-	if target == nil {
-		return 0, nil, nil, nil, errors.New(needThreeMessagesMsg)
-	}
-	words = len(strings.Fields(messagesOnly(corpus)))
+// mdStructureLineRe (the organic-sample filter) matches a line that opens
+// with a markdown list or heading marker: "- ", "* ", "• ", "# " to
+// "###### ", or a number followed by ". " or ") ". A heading needs the
+// space, so a Slack "#channel" or "#1234" at the start of a line is kept.
+var mdStructureLineRe = regexp.MustCompile(`(?m)^\s*(?:[-*][ \t]|•[ \t]|#{1,6}[ \t]|\d+[.)][ \t])`)
 
+// mdBoldRe matches a markdown "**bold**" span anywhere in a message.
+var mdBoldRe = regexp.MustCompile(`\*\*[^*\n]+\*\*`)
+
+// looksDrafted (the organic-sample filter) reports whether msg reads like
+// it was drafted by an assistant rather than typed by the person, so a
+// calibration corpus should leave it out: markdown structure (a list or
+// heading line, or any "**bold**"), or 2 or more distinct core phrase
+// rules tripped in this one message.
+func looksDrafted(msg string, set *rules.Set, coreIDs map[string]bool) bool {
+	if mdBoldRe.MatchString(msg) || mdStructureLineRe.MatchString(msg) {
+		return true
+	}
+	hitIDs := map[string]bool{}
+	for _, v := range runLint(set, msg) {
+		if v.String != "" && coreIDs[v.RuleID] {
+			hitIDs[v.RuleID] = true
+		}
+	}
+	return len(hitIDs) >= 2
+}
+
+// splitCorpusMessages splits corpus into its messages, on lines holding
+// only "---" after trimming (the same split voice.Calibrate measures
+// against), each message trimmed; empty messages are dropped.
+func splitCorpusMessages(corpus string) []string {
+	var messages []string
+	var cur []string
+	flush := func() {
+		msg := strings.TrimSpace(strings.Join(cur, "\n"))
+		if msg != "" {
+			messages = append(messages, msg)
+		}
+		cur = nil
+	}
+	for _, line := range strings.Split(textutil.Normalize(corpus), "\n") {
+		if strings.TrimSpace(line) == "---" {
+			flush()
+			continue
+		}
+		cur = append(cur, line)
+	}
+	flush()
+	return messages
+}
+
+// messageIndexByLine maps each 1-based line number of corpus, after
+// textutil.Normalize (the same text lint.Run's own Line numbers count
+// against), to the 0-based index of the message that line falls in, or -1
+// for a "---" separator line.
+func messageIndexByLine(corpus string) []int {
+	lines := strings.Split(textutil.Normalize(corpus), "\n")
+	idx := make([]int, len(lines))
+	cur := 0
+	for i, l := range lines {
+		if strings.TrimSpace(l) == "---" {
+			idx[i] = -1
+			cur++
+			continue
+		}
+		idx[i] = cur
+	}
+	return idx
+}
+
+// measure scores a calibration corpus, shared by byline_calibrate and
+// byline_setup_save. It first leaves out any message looksDrafted flags;
+// kept is what's left, rejoined with "\n---\n". The word count (the ---
+// separators excluded), the voice_target baseline voice.Calibrate
+// derives from it, and every core string-rule hit are all measured on
+// kept alone, never on a left-out message. coreHits lists one entry per
+// distinct core rule+string that hits 2 or more distinct kept messages
+// (today's reason to switch it off) -- a single hit, in only 1 kept
+// message, is reported nowhere. personalHits lists every still-active
+// personal rule kept hits, reported but never changed. err is the
+// three-messages sentence when kept doesn't hold at least 3 messages of
+// 40 or more words.
+func measure(corpus string, set *rules.Set) (words int, target map[string]any, coreHits []switchOff, personalHits []hit, kept string, leftOut int, leftOutWords int, err error) {
 	coreIDs := map[string]bool{}
 	for _, r := range set.Core() {
 		coreIDs[r.ID] = true
 	}
 
-	violations := runLint(set, corpus)
+	var keptMessages []string
+	for _, msg := range splitCorpusMessages(corpus) {
+		if looksDrafted(msg, set, coreIDs) {
+			leftOut++
+			leftOutWords += len(strings.Fields(msg))
+			continue
+		}
+		keptMessages = append(keptMessages, msg)
+	}
+	kept = strings.Join(keptMessages, "\n---\n")
+
+	target = runVoiceCalibrate(kept)
+	if target == nil {
+		return 0, nil, nil, nil, "", 0, 0, errors.New(needThreeMessagesMsg)
+	}
+	words = len(strings.Fields(messagesOnly(kept)))
+
+	violations := runLint(set, kept)
+	lineIdx := messageIndexByLine(kept)
 	type key struct{ id, s string }
 	var order []key
-	counts := map[key]int{}
+	msgSets := map[key]map[int]bool{}
 	seenPersonal := map[string]bool{}
 	for _, v := range violations {
 		if v.String == "" {
@@ -62,10 +164,15 @@ func measure(corpus string, set *rules.Set) (words int, target map[string]any, c
 		}
 		if coreIDs[v.RuleID] {
 			k := key{v.RuleID, v.String}
-			if _, ok := counts[k]; !ok {
+			if msgSets[k] == nil {
+				msgSets[k] = map[int]bool{}
 				order = append(order, k)
 			}
-			counts[k]++
+			if v.Line-1 >= 0 && v.Line-1 < len(lineIdx) {
+				if mi := lineIdx[v.Line-1]; mi >= 0 {
+					msgSets[k][mi] = true
+				}
+			}
 			continue
 		}
 		if !seenPersonal[v.RuleID] {
@@ -74,9 +181,11 @@ func measure(corpus string, set *rules.Set) (words int, target map[string]any, c
 		}
 	}
 	for _, k := range order {
-		coreHits = append(coreHits, switchOff{RuleID: k.id, String: k.s, Count: counts[k]})
+		if n := len(msgSets[k]); n >= 2 {
+			coreHits = append(coreHits, switchOff{RuleID: k.id, String: k.s, Count: n})
+		}
 	}
-	return words, target, coreHits, personalHits, nil
+	return words, target, coreHits, personalHits, kept, leftOut, leftOutWords, nil
 }
 
 // messagesOnly strips the --- separator lines from a calibration corpus,
@@ -132,14 +241,18 @@ func calibrateTool() Tool {
 			if err != nil {
 				return nil, friendlyStateError(err)
 			}
-			words, target, coreHits, _, err := measure(args["corpus"].(string), set)
+			words, target, coreHits, _, _, leftOut, leftOutWords, err := measure(args["corpus"].(string), set)
 			if err != nil {
 				return nil, err
 			}
 			if coreHits == nil {
 				coreHits = []switchOff{}
 			}
-			return withWarning(map[string]any{"words": words, "voice_target": target, "would_switch_off": coreHits}, warning), nil
+			out := map[string]any{"words": words, "voice_target": target, "would_switch_off": coreHits, "left_out": leftOut, "left_out_words": leftOutWords}
+			if words < minSetupWords {
+				out["note"] = underMinimumMsg(words)
+			}
+			return withWarning(out, warning), nil
 		},
 	}
 }
@@ -153,6 +266,7 @@ func setupSaveTool() Tool {
 			{"exemplars", "string", true},
 			{"real_voice", "string", true},
 			{"signature_lines", "array", false},
+			{"accept_fewer_words", "boolean", false},
 		},
 		Handler: handleSetupSave,
 	}
@@ -176,16 +290,22 @@ func handleSetupSave(args map[string]any) (any, error) {
 	if err != nil {
 		return nil, friendlyStateError(err)
 	}
-	words, target, coreHits, personalHits, err := measure(realVoice, set)
+	words, target, coreHits, personalHits, kept, leftOut, leftOutWords, err := measure(realVoice, set)
 	if err != nil {
 		return nil, err
+	}
+	if words < minSetupWords {
+		accept, _ := args["accept_fewer_words"].(bool)
+		if !accept {
+			return nil, errors.New(underMinimumMsg(words))
+		}
 	}
 
 	var backups []string
 	for _, wf := range []struct{ path, data string }{
 		{paths.ProfilePath(), profile},
 		{paths.ExemplarsPath(), exemplars},
-		{paths.RealVoicePath(), realVoice},
+		{paths.RealVoicePath(), kept},
 	} {
 		b, werr := state.WriteVoiceFile(wf.path, []byte(wf.data))
 		if werr != nil {
@@ -229,6 +349,8 @@ func handleSetupSave(args map[string]any) (any, error) {
 		"saved":              []string{paths.ProfilePath(), paths.ExemplarsPath(), paths.RealVoicePath(), paths.MyRulesPath()},
 		"switched_off":       switchedOff,
 		"brief_stamp":        firstLineOf(paths.BriefPath()),
+		"left_out":           leftOut,
+		"left_out_words":     leftOutWords,
 	}, warning), nil
 }
 

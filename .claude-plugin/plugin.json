@@ -1,6 +1,6 @@
 {
   "name": "byline",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Writes email and Slack messages in your own voice and checks them before they go out.",
   "author": { "name": "Kevin Brazell" },
   "homepage": "https://github.com/gunshipz/byline",
