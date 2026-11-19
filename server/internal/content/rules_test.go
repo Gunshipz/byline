@@ -56,7 +56,7 @@ func TestCoreRules_Shape(t *testing.T) {
 
 	reserved := map[string]bool{"K8": true, "K9": true, "K11": true, "K34": true, "K40": true}
 	seen := map[string]bool{}
-	var nonW []string
+	var nonOwn []string
 	for _, r := range rf.Rules {
 		id := str(r, "id")
 		for _, k := range []string{"id", "name", "ban", "fix", "bad", "good"} {
@@ -82,16 +82,16 @@ func TestCoreRules_Shape(t *testing.T) {
 		if strings.HasPrefix(id, "U") {
 			t.Errorf("rule %q: core ids never start with U", id)
 		}
-		if !strings.HasPrefix(id, "W") {
-			nonW = append(nonW, id)
+		if !strings.HasPrefix(id, ownRulePrefix) {
+			nonOwn = append(nonOwn, id)
 			if _, ok := r["test"]; ok {
 				t.Errorf("rule %q: legacy rules carry no test", id)
 			}
 		}
 	}
 	want := "K1 K2 K3 K4 K5 K6 K7 K10 K12 K13a K13b K13c K13d K13e K14 K15 K16 K17 K18 K19 K20 K35 K36 K37 K21 K22 K23 K24 K25 K26 K27 K28 G7 G19 G16 G17 G18 G23 G27 G28 P5 V1 K29 K30 K31 K32 K33 K38 K39"
-	if got := strings.Join(nonW, " "); got != want {
-		t.Errorf("non-W ids:\n got %s\nwant %s", got, want)
+	if got := strings.Join(nonOwn, " "); got != want {
+		t.Errorf("non-own ids:\n got %s\nwant %s", got, want)
 	}
 }
 
@@ -171,28 +171,13 @@ func TestCoreRules_Adopted(t *testing.T) {
 		t.Fatalf("%d rules, want 71", len(rs))
 	}
 	families := []int{3, 6, 4, 3, 3, 4, 1, 1, 2, 4, 3, 3, 3, 1, 5, 2, 1, 2, 4, 3, 4, 2}
-	// M5 (2026-11-10): W13 moved from a string match on "→" to a judgment
-	// rule, since the arrow is also correct inside a menu path.
-	judgment := map[string]bool{"W1": true, "W2": true, "W4": true, "W13": true, "W19": true, "W20": true, "W21": true, "W22": true}
-	want := map[string][]string{
-		"W3":  {"an error was introduced", "it was agreed", "concerns were raised", "the deadline was missed", "a call was made", "it was decided", "mistakes were made"},
-		"W5":  {"What happened next?", "The catch?", "So what's the fix?", "The result?", "The answer?"},
-		"W6":  {"functions as", "operates as", "flaunts", "serves as", "stands as", "boasts"},
-		"W7":  {"spotlighting the importance", "driving home the point", "reinforcing the case", "highlighting the need", "underscoring the"},
-		"W8":  {"counted, not guessed", "checked, not assumed", "recorded rather than recalled"},
-		"W9":  {"time for the work that counts", "focus on bigger things"},
-		"W10": {"opens the door to", "clears the way for", "will unlock"},
-		"W11": {"No exceptions.", "That's the whole idea.", "Nothing stays the same after that."},
-		"W12": {"not merely", "not simply", "not only"},
-		"W14": {"To wrap up,", "All told,", "Taking stock,", "Putting it together,", "Bottom line,", "In summary,", "In conclusion,", "To sum up,"},
-		"W15": {"without delay", "right away", "ASAP"},
-		"W16": {"ecstatic", "elated", "overjoyed", "stoked to announce", "thrilled", "excited to announce"},
-		"W17": {"watershed moment", "paradigm-shifting", "monumental shift", "paves the way for", "lays the groundwork for", "game-changer", "game-changing", "transformative", "setting the stage for"},
-		"W18": {"industry-leading", "next-generation", "top-tier", "pioneering", "first-of-its-kind", "world-class", "cutting-edge", "groundbreaking", "state-of-the-art"},
-	}
-
+	// M5 (2026-11-10): this copy's own rule 13 moved from a string match on
+	// "→" to a judgment rule, since the arrow is also correct inside a menu
+	// path.
+	judgment := ownRuleJudgmentOnly
+	want := ownRuleBannedPhrases
 	for i, r := range rs[len(rs)-22:] {
-		id := fmt.Sprintf("W%d", i+1)
+		id := fmt.Sprintf("%s%d", ownRulePrefix, i+1)
 		if got := str(r, "id"); got != id {
 			t.Errorf("rule %d from the end is %q, want %q", 22-i, got, id)
 			continue
@@ -298,26 +283,27 @@ func ruleStrings(r map[string]any) []string {
 }
 
 // TestCoreRules_M5ArrowIsJudgmentOnly is M5: "→" flagged prose by design
-// even in a menu path, where W13's own fix says arrows belong in menu
-// paths. Drop the string match and judge it like the family's other
-// context-dependent rules.
+// even in a menu path, where this copy's own rule 13's fix says arrows
+// belong in menu paths. Drop the string match and judge it like the
+// family's other context-dependent rules.
 func TestCoreRules_M5ArrowIsJudgmentOnly(t *testing.T) {
+	id := ownRulePrefix + "13"
 	for _, r := range coreRules(t).Rules {
-		if str(r, "id") != "W13" {
+		if str(r, "id") != id {
 			continue
 		}
 		if got := ruleStrings(r); len(got) != 0 {
-			t.Errorf("W13 strings = %q, want none", got)
+			t.Errorf("%s strings = %q, want none", id, got)
 		}
 		if str(r, "structural") != "judgment_only" {
-			t.Errorf("W13 structural = %q, want judgment_only", str(r, "structural"))
+			t.Errorf("%s structural = %q, want judgment_only", id, str(r, "structural"))
 		}
 		if str(r, "test") != str(r, "ban") {
-			t.Errorf("W13 test %q != ban %q", str(r, "test"), str(r, "ban"))
+			t.Errorf("%s test %q != ban %q", id, str(r, "test"), str(r, "ban"))
 		}
 		return
 	}
-	t.Fatal("W13 not found")
+	t.Fatalf("%s not found", id)
 }
 
 // TestCoreRules_M5NavigateAndUnpackAreFigurative is M5: bare "navigate" and

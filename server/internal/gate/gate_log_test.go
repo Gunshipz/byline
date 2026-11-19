@@ -32,7 +32,7 @@ func readLogLines(t *testing.T, path string) []string {
 func TestGateDecisionLog_RecordsDecisionAndCodeNoReasonText(t *testing.T) {
 	newHome(t)
 	hook(t, "prompt", map[string]any{"session_id": "s", "prompt": "draft a slack message to the vendor"})
-	hook(t, "pre-tool", map[string]any{"session_id": "s", "tool_name": "mcp__slack__conversations_add_message",
+	hook(t, "pre-tool", map[string]any{"session_id": "s", "tool_name": toolSlackPost,
 		"tool_input": map[string]any{"channel": bot, "text": longUnchecked}})
 
 	lines := readLogLines(t, paths.GateDecisionLogPath())
@@ -46,7 +46,7 @@ func TestGateDecisionLog_RecordsDecisionAndCodeNoReasonText(t *testing.T) {
 	if err := json.Unmarshal([]byte(lines[0]), &m); err != nil {
 		t.Fatalf("not valid JSON: %q", lines[0])
 	}
-	if m["event"] != "PreToolUse" || m["tool"] != "mcp__slack__conversations_add_message" || m["decision"] != "deny" || m["reason"] != "writing_unread" {
+	if m["event"] != "PreToolUse" || m["tool"] != toolSlackPost || m["decision"] != "deny" || m["reason"] != "writing_unread" {
 		t.Fatalf("got %+v", m)
 	}
 	if _, err := time.Parse(time.RFC3339, str(m["time"])); err != nil {
@@ -95,7 +95,7 @@ func TestGateDecisionLog_UnwritableFolderLeavesDecisionUnchanged(t *testing.T) {
 // nothing, so one send is one line, not a second misleading "none".
 func TestGateDecisionLog_ExtraModeLogsOnlyItsOwnDecisions(t *testing.T) {
 	newHome(t)
-	payload := map[string]any{"tool_name": "mcp__slack__conversations_add_message", "tool_input": map[string]any{"channel": bot, "text": longUnchecked}}
+	payload := map[string]any{"tool_name": toolSlackPost, "tool_input": map[string]any{"channel": bot, "text": longUnchecked}}
 	hook(t, "pre-tool", payload)
 	hook(t, "pre-tool-extra", payload)
 	if lines := readLogLines(t, paths.GateDecisionLogPath()); len(lines) != 1 {

@@ -53,8 +53,9 @@ var modes = map[string]func(raw []byte) *hookOutput{
 // pre-tool, and silence for every other mode. For "pre-tool" and
 // "pre-tool-extra" -- the two modes that answer a PreToolUse hook -- Run
 // is also the single place that logs the decision this call actually
-// returned, so a decision computed and discarded inside a mode is never
-// logged as if it had taken effect.
+// returned, so a decision computed and discarded inside a mode (bashCheck
+// may try one candidate per send in a command, but only ever returns one)
+// is never logged as if it had taken effect.
 func Run(mode string, in io.Reader, out io.Writer) {
 	fn, ok := modes[mode]
 	if !ok {
@@ -80,9 +81,10 @@ func Run(mode string, in io.Reader, out io.Writer) {
 // tool name, the decision this invocation actually returned ("none" when
 // it returned no opinion at all), and a short reason code -- never the
 // reason text shown to the person. The tool name is decide's own record
-// on o when there is one; otherwise it falls back to the raw payload's
-// own tool name. evlog.Append drops any error silently, so a
-// logging failure never changes or slows the decision itself.
+// on o when there is one (for a send bashCheck found inside a Bash call,
+// the send tool it maps to, not just "Bash"); otherwise it falls back to
+// the raw payload's own tool name. evlog.Append drops any error silently,
+// so a logging failure never changes or slows the decision itself.
 func logGateDecision(mode string, raw []byte, o *hookOutput) {
 	if mode != "pre-tool" && mode != "pre-tool-extra" {
 		return
@@ -307,13 +309,23 @@ func read(raw []byte) *hookOutput {
 	return nil
 }
 
+// bashCheck, when a copy sets it, decides pre-tool for a Bash call, for a
+// copy whose send commands can run from the shell. It is nil by default,
+// and then a Bash call goes to checkTool like any other tool, which never
+// treats it as a send.
+var bashCheck func(p map[string]any) *hookOutput
+
 // preTool runs on Claude Code's PreToolUse hook. A malformed payload is
 // denied outright, so a crashed or not-yet-built check never silently
-// lets a send through; otherwise checkTool decides.
+// lets a send through; otherwise bashCheck (when set) decides for a Bash
+// call and checkTool for anything else.
 func preTool(raw []byte) *hookOutput {
 	p, ok := parsePayload(raw)
 	if !ok {
 		return decide("", "deny", "malformed", malformedDenyReason)
+	}
+	if bashCheck != nil && str(field(p, "tool_name", "toolName")) == "Bash" {
+		return bashCheck(p)
 	}
 	return checkTool(p, false)
 }

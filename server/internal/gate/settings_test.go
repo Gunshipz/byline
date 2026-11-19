@@ -3,6 +3,7 @@ package gate
 import (
 	"os"
 	"slices"
+	"strings"
 	"testing"
 
 	"byline/internal/paths"
@@ -27,15 +28,21 @@ func TestGateSettings_ErrorFallsBackToDefaults(t *testing.T) {
 }
 
 func TestMatchSendTool(t *testing.T) {
-	for name, want := range map[string]string{
-		"mcp__slack__conversations_add_message":                                  "mcp__slack__conversations_add_message",
-		"mcp__plugin_SomePlugin_slack__conversations_add_message":                "mcp__slack__conversations_add_message",
-		"mcp__plugin_Some_Plugin-all_claude_ai_Microsoft_365__outlook_send_mail": "mcp__claude_ai_Microsoft_365__outlook_send_mail",
-		"mcp__plugin_x_slack__conversations_add_message":                         "mcp__slack__conversations_add_message",
-		"mcp__slack__conversations_search_messages":                              "",
-		"Write": "",
-		"mcp__plugin_x_slack__conversations_add_message_v2": "",
-	} {
+	trim := func(tool string) string { return strings.TrimPrefix(tool, "mcp__") }
+	cases := map[string]string{
+		toolSlackPost:           toolSlackPost,
+		inPlugin(toolSlackPost): toolSlackPost,
+		"mcp__plugin_Some_Plugin-all_" + trim(toolEmailSend): toolEmailSend,
+		toolSlackSearch: "",
+		"Write":         "",
+		"mcp__plugin_x_" + trim(toolSlackPost) + "_v2": "",
+	}
+	// Every default loaded through a plugin maps back to itself, never to
+	// another default whose name it happens to end with.
+	for _, tool := range state.DefaultSendTools {
+		cases["mcp__plugin_x_"+trim(tool)] = tool
+	}
+	for name, want := range cases {
 		got, ok := matchSendTool(name, state.DefaultSendTools)
 		if got != want || ok != (want != "") {
 			t.Errorf("%s: got %q %v, want %q", name, got, ok, want)

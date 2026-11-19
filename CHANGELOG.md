@@ -2,6 +2,14 @@
 
 What changed in each version of Byline, in plain English.
 
+## 1.0.5 (18 Nov 2026)
+
+- A post to a bot chat you've exempted goes through without an ask, even when Byline can't see its text.
+- A mail tool you add whose name ends in `email_draft` gets draft handling: reading or deleting a draft stays silent, and sending a saved draft as it is gets its own ask.
+- `/byline update` works as well as `/byline:byline update`; neither is mistaken for a request to write a message.
+- When there's nothing newer, `/byline:byline update` now says you're already on the newest version.
+- Behind the scenes: more of Byline's code is shared with its main source.
+
 ## 1.0.4 (18 Nov 2026)
 
 - Docs no longer talk about usage tracking. Byline never had any; the wording just said so, and it's gone now.

@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"sort"
+	"strings"
 	"testing"
 
 	"byline/internal/paths"
@@ -15,12 +16,16 @@ var (
 	writeTools = []string{"byline_draftcheck", "byline_flag", "byline_setup_save", "byline_settings_save"}
 )
 
-// TestTools_EveryToolClassifiedExactlyOnce locks Tools()'s order and checks
-// readOnlyTools plus writeTools names every tool Tools()
-// returns, exactly once each.
+// TestTools_EveryToolClassifiedExactlyOnce locks the byline_* tools'
+// order in Tools() and checks readOnlyTools plus writeTools names each
+// of them, exactly once. A copy's own extra tools, if any, carry their
+// own classification check alongside the file that adds them.
 func TestTools_EveryToolClassifiedExactlyOnce(t *testing.T) {
 	var names []string
 	for _, tl := range Tools() {
+		if !strings.HasPrefix(tl.Name, "byline_") {
+			continue
+		}
 		names = append(names, tl.Name)
 	}
 	want(t, names, []string{"byline_status", "byline_brief", "byline_lint", "byline_factlint", "byline_draftcheck",

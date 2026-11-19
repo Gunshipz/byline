@@ -20,17 +20,17 @@ func envOf(m map[string]string) func(string) string {
 	return func(k string) string { return m[k] }
 }
 
-// pluginCopy writes home/.claude/plugins/cache/byline/byline/1.0.<n>/skills/byline/skill.json;
-// requires == "" leaves requires_helper out. (Same helper as the version
-// package's tests, copied here.)
-func pluginCopy(t *testing.T, home string, n int, requires string) {
+// hostCopy writes this copy's own skillJSONPath(home, n); requires == ""
+// leaves requires_helper out. (Same helper as the version package's
+// tests, copied here.)
+func hostCopy(t *testing.T, home string, n int, requires string) {
 	t.Helper()
 	body := `{"version":"1.0.0"`
 	if requires != "" {
 		body += fmt.Sprintf(`,"requires_helper":%q`, requires)
 	}
 	body += "}"
-	path := filepath.Join(home, ".claude", "plugins", "cache", "byline", "byline", fmt.Sprintf("1.0.%d", n), "skills", "byline", "skill.json")
+	path := skillJSONPath(home, n)
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +152,7 @@ func TestServer_UnknownArgumentRejectedByName(t *testing.T) {
 
 func TestServer_UnknownArgumentCarriesUpdateNotice(t *testing.T) {
 	setupHome(t)
-	pluginCopy(t, os.Getenv("HOME"), 1, "9.0.0") // same helper as Task 1, copied here
+	hostCopy(t, os.Getenv("HOME"), 1, "9.0.0") // same helper as Task 1, copied here
 	_, _, text := callTool(t, testServer(), "echo", map[string]any{"text": "hi", "bogus": 1})
 	if !strings.HasSuffix(text, " "+version.Notice(version.Version(), "9.0.0", version.UpdateStep(noEnv))) {
 		t.Fatalf("%q", text)
@@ -165,7 +165,7 @@ func TestServer_UnknownArgumentCarriesUpdateNotice(t *testing.T) {
 // or every caller that parses it breaks.
 func TestServer_SuccessfulToolCallNeverCarriesUpdateNotice(t *testing.T) {
 	setupHome(t)
-	pluginCopy(t, os.Getenv("HOME"), 1, "9.0.0")
+	hostCopy(t, os.Getenv("HOME"), 1, "9.0.0")
 	_, isErr, text := callTool(t, testServer(), "echo", map[string]any{"text": "hi"})
 	if isErr {
 		t.Fatal(text)

@@ -50,6 +50,7 @@ func missingContext(names []string) string {
 const (
 	slackAskReason      = "Byline asks you to approve every Slack post to a person."
 	slackExemptReason   = "This chat is on Byline's list of bot chats, so it goes through without asking."
+	draftSendAskReason  = "Byline can't see the text of this saved draft, so it can't check it. Approve sending it yourself, or put the final text in the send so Byline can check it."
 	unseenTextAskReason = "Byline can't see the message in this send, so it can't check it. Approve it yourself if it's right."
 )
 

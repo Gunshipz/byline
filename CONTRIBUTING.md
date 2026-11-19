@@ -36,6 +36,8 @@ and commit the refreshed copies under `server/embed/`. `TestEmbed_CommittedCopie
 
 A file joins the list once its audience-specific part is split out into a file that lives only in one copy, so the rest of the file reads the same in both. Then it's added to `scripts/core-files.txt`, and `scripts/sync-core.sh` is run to pick it up.
 
+`scripts/sync-core.sh` also carries one fixed rule each for `skills/byline/SKILL.md` and `rules/core-rules.json`, which can't join `scripts/core-files.txt` because part of each always stays this copy's own; each rule writes a stamp file a test checks. `scripts/gen_hooks.py <repo root>` writes `hooks/hooks.json` from `server/internal/state/settings.go`'s `DefaultSendTools`, so the two always agree; run it after changing that list.
+
 ## Building
 
 ```
@@ -65,4 +67,5 @@ builds `byline-mcp` for macOS (Apple chip and Intel), Linux (x64 and arm64) and 
 4. Run `sh server/scripts/embed.sh`, then `sh server/scripts/build.sh bin`.
 5. Run `(cd server && go test ./...)` and expect exit 0. If you keep private fixtures, also run `(cd server && BYLINE_PRIVATE_FIXTURES=<folder> go test ./internal/content/ -run TestSharedPart_NoScrubTerms -v)` and expect PASS, not SKIP.
 6. Run `claude plugin validate .` and expect no errors.
-7. Merge, then tag the release: `claude plugin tag .`.
+7. Scan the tree for the private copy's words: set `$BYLINE_AMAZON_TERMS` to the word-list path `scripts/sync-core.sh` also reads, then run `git grep -inwFf "$BYLINE_AMAZON_TERMS"` and expect exit 1 (no hits).
+8. Merge, then tag the release: `claude plugin tag .`.

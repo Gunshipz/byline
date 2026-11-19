@@ -373,7 +373,7 @@ func TestWalkTextFiles_SkipsGitIgnoredPaths(t *testing.T) {
 // a system outsiders can't reach. The pattern is split so this file
 // doesn't match itself.
 func TestSharedPart_NoCompanyHosts(t *testing.T) {
-	re := regexp.MustCompile(`(?i)\b(ama` + `zon|a2` + `z|aws\.` + `dev|br` + `azil|auto` + `sde|ki` + `ro|mid` + `way|my` + `cli|phone` + `tool|aim pl` + `ugins)\b`)
+	re := regexp.MustCompile(`(?i)\b(ama` + `zon|a2` + `z|aws\.` + `dev|br` + `azil|auto` + `sde|ki` + `ro|mid` + `way|my` + `cli|phone` + `tool|ai` + `m pl` + `ugins)\b`)
 	walkTextFiles(t, repoRoot(t), func(rel, abs string) {
 		data, err := os.ReadFile(abs)
 		if err != nil {

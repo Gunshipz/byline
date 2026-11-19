@@ -16,8 +16,9 @@ const jsSpace = `[\s\v\p{Z}\x{FEFF}]`
 // draftPatterns are the phrasings that arm the gate, in the order they're
 // tried. Pattern 6 ("the team") deliberately carries no personal or team
 // names: a bare "tell <someone>" never arms by default; only
-// settings.json's extra_draft_phrases can add a name.
-var draftPatterns = []*regexp.Regexp{
+// settings.json's extra_draft_phrases can add a name. This copy's own
+// triggers (copyDraftPatterns, copy_specific.go) are tried last.
+var draftPatterns = append([]*regexp.Regexp{
 	regexp.MustCompile(`(?i)\b(draft|write|compose|put together|whip up|create|make|prepare|craft|build|come up with|help me (?:with|write|draft|compose|put together)|outline)\b[^.?!\n]{0,40}\b(message|e-?mail|reply|response|follow[- ]?up|post|note|memo|slack|dm|update|announcement|shoutout|shout[- ]?out|outreach|intro|introduction|blurb)\b`),
 	regexp.MustCompile(`(?i)\b(reply|respond|follow[- ]?up)\s+(to|with)\b`),
 	regexp.MustCompile(`(?i)\b(cold\s+)?(outreach|reach(?:ing)?\s+out)\b`),
@@ -29,12 +30,7 @@ var draftPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\bstandup\b`),
 	regexp.MustCompile(`(?i)\b1[- ]?on[- ]?1\s+prep\b`),
 	regexp.MustCompile(`(?i)\bprep\b[^.?!\n]{0,30}\b(meeting|1[- ]?on[- ]?1|1:1)\b`),
-}
-
-// formalDocStyle names long formal document types: a draft request naming
-// one of these skips the gate, because those documents get their own
-// writing process, not Byline's.
-var formalDocStyle = regexp.MustCompile(`(?i)\b(6[- ]?pager|six[- ]?pager|pr[- ]?faq|narrative|post[- ]?mortem|tech design|design doc|hld|lld)\b`)
+}, copyDraftPatterns...)
 
 // pipelineMeta names Byline's own machinery: a prompt about the hook,
 // settings or the gate itself isn't a request to draft something, so it
@@ -42,13 +38,14 @@ var formalDocStyle = regexp.MustCompile(`(?i)\b(6[- ]?pager|six[- ]?pager|pr[- ]
 var pipelineMeta = regexp.MustCompile(`(?i)\b(hook|hooks|settings\.json|pre-?tool-?use|post-?tool-?use|userpromptsubmit|gate|sentinel|matcher|enforce\w*|programmatic\w*)\b`)
 
 // bylineModeCommand matches a prompt that is itself an invocation of one of
-// Byline's own non-draft modes: the slash command is "/byline:byline" and
-// the next word is update, setup, flag, check or review. That's Byline's
-// own command, not a request to draft something, even when words later in
-// the line (or in the surrounding sentence, which this doesn't try to
-// catch) look draft-shaped. "/byline:byline" alone and "/byline:byline
-// polish" aren't in the list, so they keep counting as they do today.
-var bylineModeCommand = regexp.MustCompile(`(?i)^\s*/byline:byline\s+(update|setup|flag|check|review)\b`)
+// Byline's own non-draft modes: the first word is Byline's slash command,
+// in its short form or qualified with any plugin name, and the next word is
+// update, setup, flag, check or review. That's Byline's own command, not a
+// request to draft something, even when words later in the line (or in
+// the surrounding sentence, which this doesn't try to catch) look draft-
+// shaped. The bare command and its polish mode aren't in the list, so they
+// keep counting as they do today.
+var bylineModeCommand = regexp.MustCompile(`(?i)^\s*/(?:[\w.-]+:)?byline\s+(update|setup|flag|check|review)\b`)
 
 // collapseSpace lowercases s and collapses every run of whitespace to a
 // single space, so an extra phrase matches regardless of case or spacing.
@@ -57,9 +54,10 @@ func collapseSpace(s string) string {
 }
 
 // detectDraftIntent reports whether prompt is a request Byline should gate:
-// pipelineMeta, formalDocStyle or bylineModeCommand skip it first, then
-// draftPatterns, then extraPhrases (settings.json's extra_draft_phrases),
-// checked as a whitespace- and case-insensitive substring.
+// pipelineMeta, formalDocStyle (copy_specific.go) or bylineModeCommand
+// skip it first, then draftPatterns, then extraPhrases (settings.json's
+// extra_draft_phrases), checked as a whitespace- and case-insensitive
+// substring.
 func detectDraftIntent(prompt string, extraPhrases []string) bool {
 	if prompt == "" {
 		return false

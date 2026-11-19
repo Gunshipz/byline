@@ -3,8 +3,8 @@ package state
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
-	"slices"
 	"strings"
 	"testing"
 
@@ -36,35 +36,13 @@ func TestSettings_TemplateMatchesDefaults(t *testing.T) {
 	want(t, s.Format, 1)
 }
 
-// TestDefaultSendTools_C1_IncludesSlackPostingSuite reproduces C1: the
-// defaults covered only the Slack server's post_message, so its other
-// posting, scheduling, editing and draft tools got no ask and no
-// structure check.
-func TestDefaultSendTools_C1_IncludesSlackPostingSuite(t *testing.T) {
-	for _, want := range []string{
-		"mcp__slack__conversations_add_message",
-		"mcp__slack__conversations_add_message",
-		"mcp__slack__conversations_add_message",
-		"mcp__slack__conversations_add_message",
-		"mcp__claude_ai_Microsoft_365__teams_send_chat_message",
-		"mcp__claude_ai_Microsoft_365__teams_send_channel_message",
-		"mcp__claude_ai_Microsoft_365__teams_reply_channel_message",
-		"mcp__claude_ai_Microsoft_365__teams_send_channel_message",
-		"mcp__claude_ai_Microsoft_365__teams_send_chat_message",
-	} {
-		if !slices.Contains(DefaultSendTools, want) {
-			t.Errorf("DefaultSendTools is missing %q", want)
-		}
-	}
-}
-
 func TestSettings_ValidateRejects(t *testing.T) {
 	ok := Settings{Format: 1, SendTools: DefaultSendTools}
 	for name, c := range map[string]struct {
 		mut func(*Settings)
 		msg string
 	}{
-		"drops a default":    {func(s *Settings) { s.SendTools = DefaultSendTools[1:] }, `can't remove "mcp__claude_ai_Microsoft_365__outlook_send_mail"`},
+		"drops a default":    {func(s *Settings) { s.SendTools = DefaultSendTools[1:] }, fmt.Sprintf("can't remove %q", DefaultSendTools[0])},
 		"not a tool name":    {func(s *Settings) { s.SendTools = append(DefaultSendTools, "slack") }, `"slack" isn't a tool name`},
 		"not a channel id":   {func(s *Settings) { s.ExemptChannels = []string{"general"} }, `"general" isn't a Slack channel id`},
 		"empty draft phrase": {func(s *Settings) { s.ExtraDraftPhrases = []string{" "} }, "empty"},

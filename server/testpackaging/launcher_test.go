@@ -20,11 +20,13 @@ import (
 // they share this package.
 const askLine = `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"Byline's checks couldn't run, so approve this step yourself, or reinstall Byline."}}`
 
-const sendPayload = `{"tool_name":"mcp__slack__conversations_add_message"}`
+// sendPayload and prettySendPayload name a tool from state.DefaultSendTools,
+// in the hook's plain and plugin-prefixed matcher forms.
+var sendPayload = fmt.Sprintf(`{"tool_name":%q}`, state.DefaultSendTools[0])
 
-const prettySendPayload = `{
-  "tool_name": "mcp__plugin_Some-all_claude_ai_Microsoft_365__outlook_send_mail"
-}`
+var prettySendPayload = fmt.Sprintf(`{
+  "tool_name": "mcp__plugin_Some-all_%s"
+}`, strings.TrimPrefix(state.DefaultSendTools[len(state.DefaultSendTools)-1], "mcp__"))
 
 const skillPayload = `{"tool_name":"Skill"}`
 
@@ -40,7 +42,7 @@ func stage(t *testing.T, dirName string) (binDir string) {
 		t.Fatal(err)
 	}
 	for _, name := range []string{"byline-mcp", "byline-hook"} {
-		data, err := os.ReadFile(filepath.Join(root, "bin", name))
+		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(launcherDir), name))
 		if err != nil {
 			t.Fatalf("read launcher %s: %v", name, err)
 		}
@@ -288,11 +290,19 @@ func TestLauncher(t *testing.T) {
 		}
 	})
 
-	t.Run("launcher_missing_binary_never_asks_on_bash", func(t *testing.T) {
+	t.Run("launcher_missing_binary_asks_on_gated_bash_sends", func(t *testing.T) {
+		for _, c := range bashSendCommandsToCheck() {
+			payload := fmt.Sprintf(`{"tool_name":"Bash","tool_input":{"command":"my %s --message hi"}}`, c)
+			binDir := stage(t, "bash-"+sanitize(c))
+			stdout, _, code := run(t, binDir, "byline-hook", nil, payload, "hook", "pre-tool")
+			if code != 0 || stdout != askLine+"\n" {
+				t.Fatalf("%s: stdout=%q code=%d, want the ask line and 0", c, stdout, code)
+			}
+		}
 		binDir := stage(t, "bash-other")
 		stdout, _, code := run(t, binDir, "byline-hook", nil, bashOtherPayload, "hook", "pre-tool")
 		if code != 0 || stdout != "" {
-			t.Fatalf("a shell command: stdout=%q code=%d, want empty 0", stdout, code)
+			t.Fatalf("a shell command this hook doesn't gate: stdout=%q code=%d, want empty 0", stdout, code)
 		}
 	})
 
@@ -470,7 +480,7 @@ func TestLauncher(t *testing.T) {
 	t.Run("launcher_files_have_lf_endings", func(t *testing.T) {
 		root := repoRoot(t)
 		for _, name := range []string{"byline-mcp", "byline-hook"} {
-			data, err := os.ReadFile(filepath.Join(root, "bin", name))
+			data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(launcherDir), name))
 			if err != nil {
 				t.Fatalf("read %s: %v", name, err)
 			}

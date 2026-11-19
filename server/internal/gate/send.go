@@ -27,24 +27,15 @@ const (
 	receiptLifetime        = 60 * time.Minute
 )
 
-// slackPostTools are the canonical names the ask and exemption checks
-// treat as a chat post to a person: Slack, and Teams through the
-// Microsoft 365 connector.
-var slackPostTools = map[string]bool{
-	"mcp__slack__conversations_add_message":                     true,
-	"mcp__claude_ai_Microsoft_365__teams_send_chat_message":     true,
-	"mcp__claude_ai_Microsoft_365__teams_send_channel_message":  true,
-	"mcp__claude_ai_Microsoft_365__teams_reply_channel_message": true,
-}
-
-// isSlackPost reports whether canonical is one of slackPostTools.
+// isSlackPost reports whether canonical is one of slackPostTools, this
+// copy's list of chat tools that post to a person (copy_specific.go).
 func isSlackPost(canonical string) bool {
 	return slackPostTools[canonical]
 }
 
 // channelFields returns every channel identifier a Slack call names:
 // channelId, channel_id and channel when present, and every entry of a
-// channels array.
+// channels array (C1: the bulk tools' field).
 func channelFields(input map[string]any) []string {
 	var out []string
 	if s, ok := input["channelId"].(string); ok {
@@ -85,10 +76,32 @@ func exemptChannel(input map[string]any, exempt []string) bool {
 }
 
 // needsStructureCheck reports whether canonical's call needs a fresh,
-// matching structure-check receipt before it can go out: every send
-// does, except a Slack post to an exempt channel.
+// matching structure-check receipt before it can go out. A call to a
+// draft tool named ..._email_draft, whose operation field says what it
+// does, only counts when it's actually creating or updating a body (or
+// sending it outright); any other send tool needs one, except a Slack
+// post to an exempt channel.
 func needsStructureCheck(canonical string, input map[string]any, s state.Settings) bool {
-	return !(isSlackPost(canonical) && exemptChannel(input, s.ExemptChannels))
+	if strings.HasSuffix(canonical, "__email_draft") {
+		op := str(input["operation"])
+		if op != "create" && op != "update" {
+			return false
+		}
+		if _, ok := input["body"].(string); ok {
+			return true
+		}
+		if _, ok := input["bodyFilePath"].(string); ok {
+			return true
+		}
+		if send, ok := input["send"].(bool); ok && send {
+			return true
+		}
+		return false
+	}
+	if isSlackPost(canonical) && exemptChannel(input, s.ExemptChannels) {
+		return false
+	}
+	return true
 }
 
 // collectText recursively collects every string found under a "text" key
@@ -114,10 +127,10 @@ func collectText(v any) []string {
 }
 
 // outgoingText returns the text a send tool call would actually send: the
-// first of text, body, message or payload that's a string, plus every text field
-// inside blocks (C1: Slack's Block Kit tools), falling back to the
-// contents of bodyFilePath when none of those is present. It returns ""
-// when the call carries no text, such as sending a saved draft.
+// first of text, body, message or payload that's a string, plus every
+// text field inside blocks (C1: Slack's Block Kit tools), falling back to
+// the contents of bodyFilePath when none of those is present. It returns
+// "" when the call carries no text, such as sending a saved draft.
 func outgoingText(input map[string]any) string {
 	var parts []string
 	for _, k := range []string{"text", "body", "message", "payload"} {
@@ -289,12 +302,24 @@ func sendChecks(canonical string, input map[string]any, s state.Settings) *hookO
 		return decide(canonical, "ask", "body_file_unreadable", bodyFileAskReason(path))
 	}
 	text := outgoingText(input)
-	// A send whose text the gate can't see (a field it doesn't read, or a
-	// saved draft sent as is) is asked about, never passed unseen.
-	if strings.TrimSpace(text) == "" {
+	needs := needsStructureCheck(canonical, input, s)
+	// I3: sending a saved draft with no body sends text Byline never sees,
+	// so the person approves it, the same as any other send it can't check.
+	// Checked before Decision 3's blanket ask below so an email_draft send
+	// still gets this more specific wording.
+	if needs && strings.HasSuffix(canonical, "__email_draft") && input["send"] == true && strings.TrimSpace(text) == "" {
+		return decide(canonical, "ask", "draft_unseen", draftSendAskReason)
+	}
+	// Decision 3, 18 Nov: any send -- a tool the person added, or one of
+	// Byline's own defaults -- may carry its text in a field the gate
+	// doesn't read (upload_file's initialComment, a bot's own post call,
+	// a saved draft sent as is), so ask rather than pass it unseen.
+	// needsStructureCheck already excludes a call that sends nothing at
+	// all (email_draft's own get and delete operations, a Slack post to
+	// an exempt bot chat), so this doesn't ask about those.
+	if needs && strings.TrimSpace(text) == "" {
 		return decide(canonical, "ask", "text_unseen", unseenTextAskReason)
 	}
-	needs := needsStructureCheck(canonical, input, s)
 	if needs && looksLikeComm(text) {
 		if words := outgoingWords(text); len(words) >= minMatchWords {
 			// I3: a receipts folder that can't be saved to or read isn't

@@ -51,7 +51,7 @@ Keep only the person's own words from what comes back: drop quoted replies, forw
 
 ## Updating
 
-Quit Claude Code first, then run `claude plugin update byline@byline` in a terminal, and reopen it.
+Quit Claude Code first, then run `claude plugin update byline@byline` in a terminal. If its output says the plugin isn't installed, this copy wasn't installed the usual way: reinstall with the two commands under Claude Code above. Otherwise its own output says whether it found a newer version or this was already the newest. Reopen Claude Code after.
 
 ## Supported machines
 

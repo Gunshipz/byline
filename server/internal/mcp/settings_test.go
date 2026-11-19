@@ -20,7 +20,7 @@ func TestSettingsTools_ReadAndSave(t *testing.T) {
 	if !isErr || text != "byline_settings_save needs at least one of: send_tools, exempt_channels, extra_draft_phrases." {
 		t.Fatalf("%q", text)
 	}
-	_, isErr, text = callTool(t, s, "byline_settings_save", map[string]any{"send_tools": []any{"mcp__slack__conversations_add_message"}})
+	_, isErr, text = callTool(t, s, "byline_settings_save", map[string]any{"send_tools": []any{requiredSendTool}})
 	if !isErr || !strings.Contains(text, "can't remove") {
 		t.Fatalf("%q", text)
 	}

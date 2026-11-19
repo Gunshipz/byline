@@ -60,15 +60,47 @@ type Server struct {
 	ss           *startState
 }
 
-// startState runs once per server: establishes the voice folder, keeping
+// startState runs once per server: establishes the voice folder, and --
+// if a copy's own start hook is set -- lets it kick off background work
+// that needs to finish before the process exits. Keeps
 // EnsureVoiceFolder's error for byline_status to report.
 type startState struct {
 	once sync.Once
 	err  error
+	done chan struct{} // nil until start runs; set, then closed when the background work startHook (if any) kicked off is done
 }
 
+// startHook, if set, is background work a copy wants kicked off right
+// after EnsureVoiceFolder -- for example copying in a skill file. nil by
+// default; a copy's own file sets it, typically from init().
+var startHook func()
+
 func (ss *startState) start(client string) {
-	ss.once.Do(func() { ss.err = state.EnsureVoiceFolder() })
+	ss.once.Do(func() {
+		ss.err = state.EnsureVoiceFolder()
+		if startHook != nil {
+			ss.done = make(chan struct{})
+			go func() {
+				defer close(ss.done)
+				startHook()
+			}()
+		}
+	})
+}
+
+// wait blocks, up to timeout, until the background work start's hook
+// kicked off has finished -- or returns at once if start never ran, or
+// ran but had no hook to run, so there's nothing to wait for (gate
+// finding M15: quitting right after Serve returns could otherwise cut
+// that work off mid-way).
+func (ss *startState) wait(timeout time.Duration) {
+	if ss.done == nil {
+		return
+	}
+	select {
+	case <-ss.done:
+	case <-time.After(timeout):
+	}
 }
 
 // NewServer builds byline-mcp's real server: every tool, and a start that
@@ -79,6 +111,18 @@ func NewServer() *Server {
 	s := &Server{Tools: buildTools(ss), ss: ss}
 	s.OnInitialize = func(clientName string) { ss.start(clientName) }
 	return s
+}
+
+// WaitForStart blocks, up to timeout, until this server's start -- if it
+// ever ran, and if it kicked off background work via startHook -- has
+// finished. Call this once, after Serve returns and before exiting (gate
+// finding M15), so that work is never cut off mid-way by the process
+// quitting.
+func (s *Server) WaitForStart(timeout time.Duration) {
+	if s.ss == nil {
+		return
+	}
+	s.ss.wait(timeout)
 }
 
 // Serve reads JSON-RPC messages from r, one per line, and writes replies
@@ -341,9 +385,9 @@ func runTool(tool Tool, args map[string]any) (text string, isError bool, outcome
 }
 
 // logToolCall appends one line to tool-calls.jsonl (Part 2's local
-// observability log, since Go has no Security Events Library
-// integration yet) for every tools/call this server or the CLI tool
-// mode runs: UTC time, the tool's name, outcome, how long it took, and
+// observability log, standing in until this process has somewhere
+// central to send events) for every tools/call this server or the CLI
+// tool mode runs: UTC time, the tool's name, outcome, how long it took, and
 // the sorted argument NAMES -- never a value, never message text.
 // evlog.Append drops any error silently, so a logging failure never
 // changes or slows the tool's own result.

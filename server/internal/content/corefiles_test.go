@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -102,6 +104,66 @@ func TestCoreFiles_MatchStamp(t *testing.T) {
 	for rel := range hashes {
 		if !listed[rel] {
 			t.Errorf("%s: stamped in core-files.sha256 but not on core-files.txt", rel)
+		}
+	}
+}
+
+// TestSkillBody_MatchesStamp guards skills/byline/SKILL.md's one fixed sync
+// rule (scripts/sync-core.sh): its body, after the frontmatter, must be
+// scripts/skill-body.stamp.md with the bare "/byline " and "/byline`"
+// command form rewritten to "/byline:byline " and "/byline:byline`". A
+// mismatch means the body was edited here directly instead of through that
+// script.
+func TestSkillBody_MatchesStamp(t *testing.T) {
+	root := repoRoot(t)
+	stamp, err := os.ReadFile(filepath.Join(root, "scripts", "skill-body.stamp.md"))
+	if err != nil {
+		t.Fatalf("read scripts/skill-body.stamp.md: %v", err)
+	}
+	want := strings.NewReplacer(
+		"/byline`", "/byline:byline`",
+		"/byline ", "/byline:byline ",
+	).Replace(string(stamp))
+
+	skill := readFile(t, "skills/byline/SKILL.md")
+	idx := strings.Index(skill, "\n---\n")
+	if idx < 0 {
+		t.Fatal("skills/byline/SKILL.md has no closing frontmatter --- line")
+	}
+	if got := skill[idx+len("\n---\n"):]; got != want {
+		t.Error("skills/byline/SKILL.md body doesn't match what sync-core.sh's rule produces from scripts/skill-body.stamp.md: edited directly instead of through that script")
+	}
+}
+
+// TestCoreRules_SharedMatchStamp guards rules/core-rules.json's 49 rules
+// shared with the private copy this started from: each must still match
+// scripts/core-rules-shared.stamp.json, the sha256 scripts/sync-core.sh's
+// fixed rule for that file last wrote. A mismatch means a shared rule was
+// edited here directly instead of through that script.
+func TestCoreRules_SharedMatchStamp(t *testing.T) {
+	root := repoRoot(t)
+	data, err := os.ReadFile(filepath.Join(root, "scripts", "core-rules-shared.stamp.json"))
+	if err != nil {
+		t.Fatalf("read scripts/core-rules-shared.stamp.json: %v", err)
+	}
+	var stamped []map[string]any
+	if err := json.Unmarshal(data, &stamped); err != nil {
+		t.Fatalf("parse scripts/core-rules-shared.stamp.json: %v", err)
+	}
+
+	byID := map[string]map[string]any{}
+	for _, r := range coreRules(t).Rules {
+		byID[str(r, "id")] = r
+	}
+	for _, want := range stamped {
+		id, _ := want["id"].(string)
+		got, ok := byID[id]
+		if !ok {
+			t.Errorf("rule %q is in scripts/core-rules-shared.stamp.json but not in rules/core-rules.json", id)
+			continue
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("rule %q doesn't match scripts/core-rules-shared.stamp.json: edited directly instead of through scripts/sync-core.sh", id)
 		}
 	}
 }

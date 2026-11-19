@@ -23,7 +23,7 @@ func TestWritingGated(t *testing.T) {
 		{"Write", nil, false, false}, {"Edit", nil, false, false}, {"NotebookEdit", nil, false, false},
 		{"Agent", nil, false, false}, {"Task", nil, false, false},
 		{"Read", nil, false, false}, {"Grep", nil, false, false}, {"Glob", nil, false, false},
-		{"Bash", nil, false, false}, {"WebFetch", nil, false, false}, {"mcp__slack__conversations_search_messages", nil, false, false},
+		{"Bash", nil, false, false}, {"WebFetch", nil, false, false}, {toolSlackSearch, nil, false, false},
 		{"mcp__anything__send", nil, true, true},
 		{"Skill", sk("byline", "polish"), false, true},
 		{"Skill", sk("SomePlugin:byline", "Polish the draft"), false, true},

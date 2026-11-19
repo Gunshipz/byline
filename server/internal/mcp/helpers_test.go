@@ -80,9 +80,9 @@ func callTool(t *testing.T, s *Server, name string, args map[string]any) (out ma
 	return out, isError, text
 }
 
-// setupHome sets BYLINE_HOME, HOME and USERPROFILE to
-// fresh temp dirs, clears CLAUDE_CONFIG_DIR, and makes the
-// voice folder. It returns BYLINE_HOME.
+// setupHome sets BYLINE_HOME, HOME and USERPROFILE to fresh temp dirs,
+// clears this copy's own environment knobs, and makes the voice folder.
+// It returns BYLINE_HOME.
 func setupHome(t *testing.T) string {
 	t.Helper()
 	home := t.TempDir()
@@ -90,7 +90,7 @@ func setupHome(t *testing.T) string {
 	hd := t.TempDir()
 	t.Setenv("HOME", hd)
 	t.Setenv("USERPROFILE", hd)
-	t.Setenv("CLAUDE_CONFIG_DIR", "")
+	clearCopyEnv(t)
 	if err := state.EnsureVoiceFolder(); err != nil {
 		t.Fatal(err)
 	}

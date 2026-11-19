@@ -53,7 +53,7 @@ func TestPreTool_SignatureIsNotNewWords(t *testing.T) {
 			newHome(t)
 			withSignatureLines(t, "The Sender")
 			addReceipt(t, sigReply, 0)
-			for _, tool := range []string{"mcp__gmail__draft_email", "mcp__claude_ai_Microsoft_365__outlook_send_mail"} {
+			for _, tool := range []string{toolDraftAction, toolEmailSend} {
 				if o := sendDecision(t, tool, map[string]any{"action": "createReply", "body": htmlReply(sig)}); dec(o) == "deny" {
 					t.Fatalf("%s: the person's own signature must not count as unchecked words: %s", tool, o.HookSpecificOutput.PermissionDecisionReason)
 				}
@@ -69,7 +69,7 @@ func TestPreTool_SignatureInCheckedCopyOnly(t *testing.T) {
 	withSignatureLines(t, "The Sender")
 	addReceipt(t, sigReply+"\n\n"+textSignature, 0)
 	for name, body := range map[string]string{"HTML signature": htmlReply(msoSignature), "no signature": "<p>" + sigReply + "</p>"} {
-		if o := sendDecision(t, "mcp__claude_ai_Microsoft_365__outlook_send_mail", map[string]any{"body": body}); dec(o) == "deny" {
+		if o := sendDecision(t, toolEmailSend, map[string]any{"body": body}); dec(o) == "deny" {
 			t.Errorf("%s: %s", name, o.HookSpecificOutput.PermissionDecisionReason)
 		}
 	}
@@ -81,7 +81,7 @@ func TestPreTool_FullSavedSignatureLineMatches(t *testing.T) {
 	newHome(t)
 	withSignatureLines(t, "The Sender | Senior Manager, Regional Facilities Planning", "Example Corp | Operations Strategy and Delivery")
 	addReceipt(t, sigReply, 0)
-	if o := sendDecision(t, "mcp__claude_ai_Microsoft_365__outlook_send_mail", map[string]any{"body": htmlReply(msoSignature)}); dec(o) == "deny" {
+	if o := sendDecision(t, toolEmailSend, map[string]any{"body": htmlReply(msoSignature)}); dec(o) == "deny" {
 		t.Fatal(o.HookSpecificOutput.PermissionDecisionReason)
 	}
 }
@@ -93,7 +93,7 @@ func TestPreTool_ContentAfterSignatureCueStillCounts(t *testing.T) {
 	withSignatureLines(t, "The Sender")
 	addReceipt(t, sigReply, 0)
 	tail := "<p>The Sender</p><p>Also the vendor invoices for racking were never reconciled.</p><p>Harbor lantern velvet orchard thistle granite.</p><p>Meadow falcon anchor copper willow ember.</p><p>Glacier compass driftwood sparrow quartz lagoon.</p><p>Cedar prairie ridgeline sable tundra violet.</p>"
-	if o := sendDecision(t, "mcp__claude_ai_Microsoft_365__outlook_send_mail", map[string]any{"body": "<p>" + sigReply + "</p>" + tail}); dec(o) != "deny" {
+	if o := sendDecision(t, toolEmailSend, map[string]any{"body": "<p>" + sigReply + "</p>" + tail}); dec(o) != "deny" {
 		t.Fatalf("six lines of new content after a name line must still be denied: got %+v", o)
 	}
 }
@@ -105,7 +105,7 @@ func TestPreTool_ReceiptFromExactHTMLBody(t *testing.T) {
 	withSignatureLines(t, "The Sender")
 	body := htmlReply(msoSignature)
 	addReceipt(t, body, 0)
-	if o := sendDecision(t, "mcp__claude_ai_Microsoft_365__outlook_send_mail", map[string]any{"body": body}); dec(o) == "deny" {
+	if o := sendDecision(t, toolEmailSend, map[string]any{"body": body}); dec(o) == "deny" {
 		t.Fatal(o.HookSpecificOutput.PermissionDecisionReason)
 	}
 }
@@ -118,7 +118,7 @@ func TestBestCoverage_TieUsesFewerUnmatched(t *testing.T) {
 	extra := " Harbor lantern velvet orchard thistle granite meadow falcon anchor copper willow."
 	addReceipt(t, sigReply, 2*time.Minute)
 	addReceipt(t, sigReply+extra, time.Minute)
-	if o := sendDecision(t, "mcp__claude_ai_Microsoft_365__outlook_send_mail", map[string]any{"body": sigReply + extra}); dec(o) == "deny" {
+	if o := sendDecision(t, toolEmailSend, map[string]any{"body": sigReply + extra}); dec(o) == "deny" {
 		t.Fatalf("the newer receipt checked this exact copy: %s", o.HookSpecificOutput.PermissionDecisionReason)
 	}
 }
@@ -131,7 +131,7 @@ func TestPreTool_TitleLineInBodyIsNotASignature(t *testing.T) {
 	withSignatureLines(t, "The Sender")
 	addReceipt(t, sigReply, 0)
 	tail := "<p>Manager, please review the attached before Friday.</p><p>Harbor lantern velvet orchard thistle granite meadow.</p><p>Falcon anchor copper willow ember glacier compass.</p>"
-	if o := sendDecision(t, "mcp__claude_ai_Microsoft_365__outlook_send_mail", map[string]any{"body": "<p>" + sigReply + "</p>" + tail}); dec(o) != "deny" {
+	if o := sendDecision(t, toolEmailSend, map[string]any{"body": "<p>" + sigReply + "</p>" + tail}); dec(o) != "deny" {
 		t.Fatalf("new lines after a body line starting with a title must still be denied: got %+v", o)
 	}
 }
@@ -143,7 +143,7 @@ func TestPreTool_LongBlockAfterNameStillCounts(t *testing.T) {
 	withSignatureLines(t, "The Sender")
 	addReceipt(t, sigReply, 0)
 	tail := "<p>The Sender | harbor lantern velvet orchard thistle granite meadow falcon anchor</p><p>Copper willow ember glacier compass driftwood sparrow quartz lagoon cedar</p><p>Prairie ridgeline sable tundra violet marble canyon ferry orbit zephyr</p>"
-	if o := sendDecision(t, "mcp__claude_ai_Microsoft_365__outlook_send_mail", map[string]any{"body": "<p>" + sigReply + "</p>" + tail}); dec(o) != "deny" {
+	if o := sendDecision(t, toolEmailSend, map[string]any{"body": "<p>" + sigReply + "</p>" + tail}); dec(o) != "deny" {
 		t.Fatalf("a 30-plus word block after the name line must still be denied: got %+v", o)
 	}
 }

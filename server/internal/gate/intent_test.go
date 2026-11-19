@@ -6,7 +6,7 @@ import (
 )
 
 func TestDetectDraftIntent_Patterns(t *testing.T) {
-	for _, p := range []string{
+	for _, p := range append([]string{
 		"write a quick note for the vendor",
 		"create a cold outreach outline for a slack message", // the 2026-08-25 miss
 		"respond to the vendor's question",
@@ -20,7 +20,7 @@ func TestDetectDraftIntent_Patterns(t *testing.T) {
 		"1on1 prep for tomorrow",
 		"prep me for the meeting with finance",
 		"DRAFT A REPLY",
-	} {
+	}, copyDraftPrompts...) {
 		if !detectDraftIntent(p, nil) {
 			t.Errorf("%q: want a draft request", p)
 		}
@@ -33,14 +33,12 @@ func TestDetectDraftIntent_Patterns(t *testing.T) {
 }
 
 func TestDetectDraftIntent_SkipsComeFirst(t *testing.T) {
-	for _, p := range []string{
+	for _, p := range append([]string{
 		"create a hook that forces you to use the humanizer before you draft a message",
 		"update settings.json so a draft message is checked",
 		"write a 6-pager on the filing archive",
 		"draft the PR FAQ announcement",
-		"draft a post-mortem follow-up",
-		"write the design doc for the importer",
-	} {
+	}, copyFormalDocPrompts...) {
 		if detectDraftIntent(p, nil) {
 			t.Errorf("%q: the skip must win", p)
 		}
@@ -50,36 +48,42 @@ func TestDetectDraftIntent_SkipsComeFirst(t *testing.T) {
 	}
 }
 
-// Several of these would also arm the gate on text alone (pattern 1, via a
-// draft-shaped word after the mode name), which is what actually proves the
-// new skip does the work rather than the prompt just missing every pattern
-// on its own.
+// A prompt like "create a byline update feature" arms the gate through
+// pattern 1, so Byline's own mode commands must skip instead. Several of
+// these would also arm the gate on text alone (pattern 1 again, via a
+// draft-shaped word after the mode name), which is what actually proves
+// the skip does the work rather than the prompt just missing every
+// pattern on its own. Both forms of the command skip: this copy's own
+// (bylineCommand) and the short "/byline".
 func TestDetectDraftIntent_BylineModeCommandsSkip(t *testing.T) {
-	for _, p := range []string{
-		"/byline:byline update",
-		"/byline:byline update now please",
-		"/byline:byline update create a message explaining this to the team",
-		"/byline:byline setup",
-		"/byline:byline setup create a quick email for onboarding",
-		"/byline:byline flag this phrase",
-		"/byline:byline check write a reply to the vendor",
-		"/byline:byline review draft a response for the customer",
-		"  /byline:byline UPDATE",
-		"/BYLINE:BYLINE update create an announcement",
-	} {
-		if detectDraftIntent(p, nil) {
-			t.Errorf("%q: /byline:byline's own mode command must skip", p)
+	for _, cmd := range []string{bylineCommand, "/byline"} {
+		for _, p := range []string{
+			cmd + " update",
+			cmd + " update now please",
+			cmd + " update create a message explaining this to the team",
+			cmd + " setup",
+			cmd + " setup create a quick email for onboarding",
+			cmd + " flag this phrase",
+			cmd + " check write a reply to the vendor",
+			cmd + " review draft a response for the customer",
+			"  " + cmd + " UPDATE",
+			strings.ToUpper(cmd) + " update create an announcement",
+		} {
+			if detectDraftIntent(p, nil) {
+				t.Errorf("%q: Byline's own mode command must skip", p)
+			}
 		}
 	}
 }
 
 func TestDetectDraftIntent_BylineModeSkipDoesNotWiden(t *testing.T) {
-	// "/byline:byline" and "/byline:byline polish" must keep today's
-	// result: neither one is a draft request now, and the new skip must
-	// not touch that.
-	for _, p := range []string{"/byline:byline", "/byline:byline polish"} {
-		if detectDraftIntent(p, nil) {
-			t.Errorf("%q: must not newly count as a draft request", p)
+	// The bare command and its polish mode must keep today's result:
+	// neither one is a draft request now, and the skip must not touch that.
+	for _, cmd := range []string{bylineCommand, "/byline"} {
+		for _, p := range []string{cmd, cmd + " polish"} {
+			if detectDraftIntent(p, nil) {
+				t.Errorf("%q: must not newly count as a draft request", p)
+			}
 		}
 	}
 	// A plain writing request must keep arming the gate, same as before.

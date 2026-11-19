@@ -12,6 +12,7 @@ import (
 	"sync"
 	"testing"
 
+	"byline/internal/mcp"
 	"byline/internal/paths"
 	"byline/internal/version"
 )
@@ -53,19 +54,6 @@ func decodeUseNumber(t *testing.T, s string) map[string]any {
 		t.Fatal(err)
 	}
 	return m
-}
-
-func entries(t *testing.T, dir string) []string {
-	t.Helper()
-	es, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var names []string
-	for _, e := range es {
-		names = append(names, e.Name())
-	}
-	return names
 }
 
 // jsonPath decodes line as JSON-RPC (numbers kept) and walks a dotted path
@@ -152,7 +140,7 @@ func TestMain_ServesOverStdio(t *testing.T) {
 	bin := buildBinary(t)
 	home := filepath.Join(t.TempDir(), "byline")
 	cmd := exec.Command(bin)
-	cmd.Env = append(os.Environ(), "BYLINE_HOME="+home, "HOME="+t.TempDir())
+	cmd.Env = append(append(os.Environ(), "BYLINE_HOME="+home, "HOME="+t.TempDir()), extraTestEnv(true)...)
 	cmd.Stdin = strings.NewReader(strings.Join([]string{
 		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"t","version":"1"}}}`,
 		`{"jsonrpc":"2.0","method":"notifications/initialized"}`,
@@ -167,7 +155,7 @@ func TestMain_ServesOverStdio(t *testing.T) {
 	want(t, len(lines), 3)
 	want(t, jsonPath(t, lines[0], "result.serverInfo.name"), "byline-mcp")
 	want(t, jsonPath(t, lines[0], "result.serverInfo.version"), version.Version())
-	want(t, len(jsonPath(t, lines[1], "result.tools").([]any)), 11)
+	want(t, len(jsonPath(t, lines[1], "result.tools").([]any)), len(mcp.Tools()))
 	status := jsonText(t, lines[2]) // the tool's result JSON
 	want(t, status["voice_folder"], home)
 	assertFile(t, filepath.Join(home, "brief.md"))
@@ -177,7 +165,7 @@ func TestMain_ToolModeDispatch(t *testing.T) {
 	bin := buildBinary(t)
 	cmd := exec.Command(bin, "tool", "byline_status")
 	cmd.Stdin = strings.NewReader("{}")
-	cmd.Env = append(os.Environ(), "BYLINE_HOME="+filepath.Join(t.TempDir(), "byline"), "HOME="+t.TempDir())
+	cmd.Env = append(append(os.Environ(), "BYLINE_HOME="+filepath.Join(t.TempDir(), "byline"), "HOME="+t.TempDir()), extraTestEnv(false)...)
 	out, err := cmd.Output()
 	if err != nil || decodeUseNumber(t, string(out))["version"] != version.Version() {
 		t.Fatalf("%v %q", err, out)
@@ -213,11 +201,12 @@ func TestIsTerminal_FalseForPipeAndRegularFile(t *testing.T) {
 }
 
 // TestMain_NoArgsWithPipedStdinPrintsNoModeListToStderr is the subprocess
-// half of M14: every real caller (Claude Code and this test) pipes stdin, so startup must stay silent on stderr.
+// half of M14: every real caller (and this test) pipes stdin, so startup
+// must stay silent on stderr.
 func TestMain_NoArgsWithPipedStdinPrintsNoModeListToStderr(t *testing.T) {
 	bin := buildBinary(t)
 	cmd := exec.Command(bin)
-	cmd.Env = append(os.Environ(), "BYLINE_HOME="+filepath.Join(t.TempDir(), "byline"), "HOME="+t.TempDir())
+	cmd.Env = append(append(os.Environ(), "BYLINE_HOME="+filepath.Join(t.TempDir(), "byline"), "HOME="+t.TempDir()), extraTestEnv(false)...)
 	cmd.Stdin = strings.NewReader(initLine + "\n")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr

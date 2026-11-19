@@ -6,7 +6,6 @@ package version
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,11 +13,8 @@ import (
 	"byline/embed"
 )
 
-const (
-	PluginName    = "byline"
-	SkillID       = "byline"
-	UpdateCommand = "claude plugin update byline@byline"
-)
+// SkillID is the embedded skill's directory name under skills/.
+const SkillID = "byline"
 
 var versionRe = regexp.MustCompile(`^\d+(\.\d+)*$`)
 
@@ -64,43 +60,12 @@ func Compare(a, b string) int {
 	return 0
 }
 
-// RequiredHelper returns the requires_helper version declared by the newest
-// Byline plugin copy in Claude Code's plugin cache
-// (<config>/plugins/cache/<marketplace>/byline/<version>/), so a helper
-// still running from an older copy after an update can say so. "" if
-// there is none, or it can't be read or parsed.
-func RequiredHelper(getenv func(string) string, home string) string {
-	config := getenv("CLAUDE_CONFIG_DIR")
-	if config == "" {
-		config = filepath.Join(home, ".claude")
-	}
-	skills, err := filepath.Glob(filepath.Join(config, "plugins", "cache", "*", PluginName, "*", "skills", SkillID, "skill.json"))
-	if err != nil {
-		return ""
-	}
-	bestVersion, bestPath := "", ""
-	for _, p := range skills {
-		v := filepath.Base(filepath.Dir(filepath.Dir(filepath.Dir(p))))
-		if !versionRe.MatchString(v) {
-			continue
-		}
-		if bestPath == "" || Compare(v, bestVersion) > 0 {
-			bestVersion, bestPath = v, p
-		}
-	}
-	if bestPath == "" {
-		return ""
-	}
-	var m map[string]any
-	if !readJSONFile(bestPath, &m) {
-		return ""
-	}
-	s, _ := m["requires_helper"].(string)
-	return s
-}
+// RequiredHelper and UpdateStep are declared per copy in copy_specific.go:
+// where the newest install lives, and the wording of the step that
+// updates it, differ by copy.
 
-// readJSONFile decodes a plugin copy's skill.json with UseNumber, so an unknown numeric field survives exactly rather
-// than rounding through float64.
+// readJSONFile decodes a copy's skill.json with UseNumber, so an unknown
+// numeric field survives exactly rather than rounding through float64.
 func readJSONFile(path string, v any) bool {
 	f, err := os.Open(path)
 	if err != nil {
@@ -110,11 +75,6 @@ func readJSONFile(path string, v any) bool {
 	dec := json.NewDecoder(f)
 	dec.UseNumber()
 	return dec.Decode(v) == nil
-}
-
-// UpdateStep names the one step that gets the right version installed.
-func UpdateStep(getenv func(string) string) string {
-	return "run " + UpdateCommand + " in a terminal"
 }
 
 // Notice formats the update-needed sentence, or "" if either version isn't

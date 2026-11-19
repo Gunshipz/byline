@@ -17,23 +17,33 @@ import (
 
 func TestNeedsStructureCheck(t *testing.T) {
 	s := state.Settings{SendTools: state.DefaultSendTools, ExemptChannels: []string{bot}}
-	const slack = "mcp__slack__conversations_add_message"
+	const draft, slack = toolDraftOps, toolSlackPost
 	for _, c := range []struct {
 		tool string
 		in   map[string]any
 		want bool
 	}{
-		{"mcp__claude_ai_Microsoft_365__outlook_create_draft", map[string]any{"body": "x"}, true},
-		{"mcp__claude_ai_Microsoft_365__outlook_create_reply_draft", map[string]any{}, true},
-		{"mcp__claude_ai_Microsoft_365__outlook_send_mail", map[string]any{}, true},
-		{"mcp__claude_ai_Microsoft_365__outlook_forward_mail", map[string]any{}, true},
-		{"mcp__gmail__draft_email", map[string]any{}, true},
+		{draft, map[string]any{"operation": "get"}, false},
+		{draft, map[string]any{"operation": "create", "body": "x"}, true},
+		{draft, map[string]any{"operation": "update", "bodyFilePath": "/x"}, true},
+		{draft, map[string]any{"operation": "create"}, false},
+		{draft, map[string]any{"operation": "create", "send": true}, true},
+		{draft, map[string]any{"operation": "create", "send": "true"}, false},
+		{draft, map[string]any{"operation": "delete", "body": "x"}, false},
 		{slack, map[string]any{"channel": bot}, false},
 		{slack, map[string]any{"channelId": bot}, false},
+		{slack, map[string]any{"channel_id": bot}, false},
 		{slack, map[string]any{"channelId": person, "channel": bot}, true},
+		{slack, map[string]any{"channelId": bot, "channel_id": person}, true},
 	} {
 		if got := needsStructureCheck(c.tool, c.in, s); got != c.want {
 			t.Errorf("%s %v: got %v, want %v", c.tool, c.in, got, c.want)
+		}
+	}
+	// Every other default send tool needs a check on any call.
+	for _, tool := range state.DefaultSendTools {
+		if tool != toolDraftOps && !needsStructureCheck(tool, map[string]any{}, s) {
+			t.Errorf("%s: a send tool needs a structure check", tool)
 		}
 	}
 }
@@ -48,6 +58,8 @@ func TestOutgoingText(t *testing.T) {
 		{map[string]any{"text": "a", "body": "b"}, "a"},
 		{map[string]any{"body": "b", "message": "c"}, "b"},
 		{map[string]any{"message": "c"}, "c"},
+		{map[string]any{"message": "c", "payload": "p"}, "c"},
+		{map[string]any{"payload": "p"}, "p"},
 		{map[string]any{"text": "", "bodyFilePath": f}, "from file"},
 		{map[string]any{"text": 5, "body": "b"}, "b"},
 		{map[string]any{"bodyFilePath": "/no/such"}, ""},
@@ -70,6 +82,12 @@ func TestExemptChannel_M2_AllPresentFieldsMustBeExempt(t *testing.T) {
 	}
 	if !exemptChannel(map[string]any{"channelId": bot, "channel": bot}, exempt) {
 		t.Error("both fields exempt: want exempt")
+	}
+	if exemptChannel(map[string]any{"channelId": bot, "channel_id": person}, exempt) {
+		t.Error("channelId exempt but channel_id isn't: want not exempt")
+	}
+	if !exemptChannel(map[string]any{"channel_id": bot}, exempt) {
+		t.Error("channel_id alone, exempt: want exempt")
 	}
 	if exemptChannel(map[string]any{}, exempt) {
 		t.Error("no channel field at all: want not exempt")
@@ -128,7 +146,7 @@ func TestPreTool_I2_SlackLinksMatchAfterCheck(t *testing.T) {
 		"and <https://example.com/three|third report> so you can check the numbers yourself " +
 		"before we send anything out to the team."
 	addReceipt(t, linkMessage, 0)
-	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": "mcp__slack__conversations_add_message",
+	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": toolSlackPost,
 		"tool_input": map[string]any{"channel": person, "text": linkMessage}})
 	if dec(o) != "ask" {
 		t.Fatalf("a message checked verbatim, with Slack links, must pass its own structure check: got %+v", o)
@@ -204,7 +222,7 @@ func TestPreTool_I1_AddedContentAfterCheckIsDenied(t *testing.T) {
 		fmt.Fprintf(&extra, "Sentence %d brings up the %s nobody on the team has reviewed or approved yet. ", i, w)
 	}
 	text := bodyMD + "\n" + extra.String()
-	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": "mcp__claude_ai_Microsoft_365__outlook_send_mail", "tool_input": map[string]any{"body": text}})
+	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": toolEmailSend, "tool_input": map[string]any{"body": text}})
 	if dec(o) != "deny" {
 		t.Fatalf("content added after the check must still be denied: got %+v", o)
 	}
@@ -225,7 +243,7 @@ func TestPreTool_I3_ReceiptsFolderUnusable(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("BYLINE_HOME", filepath.Join(regularFile, "byline"))
-	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": "mcp__claude_ai_Microsoft_365__outlook_send_mail",
+	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": toolEmailSend,
 		"tool_input": map[string]any{"body": longUnchecked}})
 	if dec(o) != "ask" {
 		t.Fatalf("an unusable receipts folder must ask, not deny: got %+v", o)
@@ -242,7 +260,7 @@ func TestPreTool_I3_ReceiptsFolderUnusable(t *testing.T) {
 func TestPreTool_M6_UnreadableBodyFileAsks(t *testing.T) {
 	newHome(t)
 	missing := filepath.Join(t.TempDir(), "missing.html")
-	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": "mcp__claude_ai_Microsoft_365__outlook_create_draft",
+	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": toolEmailDraft,
 		"tool_input": map[string]any{"operation": "create", "bodyFilePath": missing}})
 	if dec(o) != "ask" {
 		t.Fatalf("an unreadable bodyFilePath must ask, not silently pass: got %+v", o)
@@ -282,7 +300,7 @@ func TestStructureDenyReason_Text(t *testing.T) {
 func TestPreTool_SendDecisions(t *testing.T) {
 	newHome(t)
 	post := func(ch, text string) map[string]any {
-		return map[string]any{"tool_name": "mcp__slack__conversations_add_message", "tool_input": map[string]any{"channel": ch, "text": text}}
+		return map[string]any{"tool_name": toolSlackPost, "tool_input": map[string]any{"channel": ch, "text": text}}
 	}
 	check := func(p map[string]any, want, reason string) {
 		t.Helper()
@@ -294,44 +312,40 @@ func TestPreTool_SendDecisions(t *testing.T) {
 	check(post(person, longUnchecked), "deny", "No structure check has passed")
 	check(post(bot, longUnchecked), "allow", slackExemptReason)
 	check(post(person, "Thanks, got it."), "ask", slackAskReason)
+	// A bot chat on the exempt list goes through even with no text Byline
+	// can see: it isn't a send to a person.
+	check(map[string]any{"tool_name": toolSlackPost, "tool_input": map[string]any{"channel": bot}}, "allow", slackExemptReason)
+	check(map[string]any{"tool_name": toolEmailDraft, "tool_input": silentDraftCall}, "", "")
 	addReceipt(t, bodyMD, 0)
 	check(post(person, bodySlack), "ask", slackAskReason)
-	check(map[string]any{"tool_name": "mcp__claude_ai_Microsoft_365__outlook_send_mail", "tool_input": map[string]any{"body": bodyHTML()}}, "", "")
+	check(map[string]any{"tool_name": toolEmailSend, "tool_input": map[string]any{"body": bodyHTML()}}, "", "")
 	check(post(person, longUnchecked), "deny", "is in this copy") // M4: wording fix, was "matches only"
 }
 
 // TestPreTool_C1_ExpandedSlackToolsGetSendChecks reproduces C1's failing
-// input: an armed session, nothing read, and one of the Slack server's
-// other posting, scheduling, editing or draft tools carrying unchecked
-// content to a person. Before the fix none of these printed anything at
-// all.
+// input: an armed session, nothing read, and any of the chat tools that
+// post, schedule, edit or save a draft carrying unchecked content to a
+// person. Before the fix only one of them printed anything at all.
 func TestPreTool_C1_ExpandedSlackToolsGetSendChecks(t *testing.T) {
 	newHome(t)
-	for _, tool := range []string{
-		"mcp__slack__conversations_add_message",
-		"mcp__slack__conversations_add_message",
-		"mcp__slack__conversations_add_message",
-		"mcp__claude_ai_Microsoft_365__teams_send_chat_message",
-		"mcp__claude_ai_Microsoft_365__teams_send_channel_message",
-		"mcp__claude_ai_Microsoft_365__teams_reply_channel_message",
-		"mcp__claude_ai_Microsoft_365__teams_send_channel_message",
-	} {
+	for tool := range slackPostTools {
 		o, _ := hook(t, "pre-tool", map[string]any{"tool_name": tool, "tool_input": map[string]any{"channel": person, "text": longUnchecked}})
 		if dec(o) != "deny" {
 			t.Errorf("%s: want deny (no receipt yet), got %+v", tool, o)
 		}
+		// A post that carries no text of its own (a saved draft) only gets the ask.
+		o, _ = hook(t, "pre-tool", map[string]any{"tool_name": tool, "tool_input": map[string]any{"channel": person}})
+		if dec(o) != "ask" {
+			t.Errorf("%s with no text: want ask, got %+v", tool, o)
+		}
 	}
-	// post_draft carries no text of its own, so it only gets the ask.
-	o, _ := hook(t, "pre-tool", map[string]any{"tool_name": "mcp__claude_ai_Microsoft_365__teams_send_chat_message", "tool_input": map[string]any{"channel": person}})
-	if dec(o) != "ask" {
-		t.Errorf("post_draft: want ask, got %+v", o)
-	}
-	// Once a matching receipt exists, the expanded tools reach the ask too.
+	// Once a matching receipt exists, every chat post tool reaches the ask too.
 	addReceipt(t, bodyMD, 0)
-	o, _ = hook(t, "pre-tool", map[string]any{"tool_name": "mcp__claude_ai_Microsoft_365__teams_reply_channel_message",
-		"tool_input": map[string]any{"channel": person, "text": bodySlack}})
-	if dec(o) != "ask" {
-		t.Errorf("edit_message after a passing receipt: want ask, got %+v", o)
+	for tool := range slackPostTools {
+		o, _ := hook(t, "pre-tool", map[string]any{"tool_name": tool, "tool_input": map[string]any{"channel": person, "text": bodySlack}})
+		if dec(o) != "ask" {
+			t.Errorf("%s after a passing receipt: want ask, got %+v", tool, o)
+		}
 	}
 }
 
@@ -344,7 +358,7 @@ func TestPreTool_C1_BlocksTextCountsForStructureCheck(t *testing.T) {
 	blocks := []any{
 		map[string]any{"type": "section", "text": map[string]any{"type": "mrkdwn", "text": bodySlack}},
 	}
-	call := map[string]any{"tool_name": "mcp__slack__conversations_add_message", "tool_input": map[string]any{"channel": person, "blocks": blocks}}
+	call := map[string]any{"tool_name": toolSlackBlocks, "tool_input": map[string]any{"channel": person, "blocks": blocks}}
 	if o, _ := hook(t, "pre-tool", call); dec(o) != "deny" {
 		t.Fatalf("blocks text with no receipt: want deny, got %+v", o)
 	}
@@ -383,9 +397,13 @@ func TestPreTool_PluginPrefixedGraspAndCustomTools(t *testing.T) {
 		in   map[string]any
 		want string
 	}{
-		{"mcp__plugin_SomePlugin_claude_ai_Microsoft_365__outlook_send_mail", map[string]any{"body": longUnchecked}, "deny"},
-		{"mcp__plugin_SomePlugin_slack__conversations_add_message", map[string]any{"channel": bot, "text": longUnchecked}, "allow"},
-		{"mcp__gmail__draft_email", map[string]any{"action": "create", "body": longUnchecked}, "deny"},
+		{inPlugin(toolEmailSend), map[string]any{"body": longUnchecked}, "deny"},
+		{inPlugin(toolSlackPost), map[string]any{"channel": bot, "text": longUnchecked}, "allow"},
+		{toolDraftAction, map[string]any{"action": "create", "body": longUnchecked}, "deny"},
+		// Decision 3, 18 Nov: this action carries no text at all, so it now
+		// asks rather than going through silently (it still isn't denied,
+		// since there's nothing for the structure check to compare).
+		{toolDraftAction, map[string]any{"action": "delete", "messageId": "x"}, "ask"},
 	} {
 		if o, _ := hook(t, "pre-tool", map[string]any{"tool_name": c.tool, "tool_input": c.in}); dec(o) != c.want {
 			t.Errorf("%s: got %q, want %q", c.tool, dec(o), c.want)
@@ -397,15 +415,20 @@ func TestPreTool_PluginPrefixedGraspAndCustomTools(t *testing.T) {
 			t.Errorf("%s: a send tool the person added is gated by pre-tool --extra", name)
 		}
 	}
-	if o, _ := hook(t, "pre-tool", map[string]any{"tool_name": "mcp__slack__conversations_add_message", "tool_input": map[string]any{"channel": person, "text": longUnchecked}}); dec(o) != "deny" {
+	if o, _ := hook(t, "pre-tool", map[string]any{"tool_name": toolSlackPost, "tool_input": map[string]any{"channel": person, "text": longUnchecked}}); dec(o) != "deny" {
 		t.Error("adding a tool must not drop a default one from pre-tool")
 	}
+}
+
+// inPlugin is tool's name as a plugin named SomePlugin loads it.
+func inPlugin(tool string) string {
+	return "mcp__plugin_SomePlugin_" + strings.TrimPrefix(tool, "mcp__")
 }
 
 func TestPreTool_WritingDenyBeatsSlackAllow(t *testing.T) {
 	newHome(t)
 	hook(t, "prompt", map[string]any{"session_id": "s", "prompt": "draft a slack message to the vendor"})
-	o, _ := hook(t, "pre-tool", map[string]any{"session_id": "s", "tool_name": "mcp__slack__conversations_add_message",
+	o, _ := hook(t, "pre-tool", map[string]any{"session_id": "s", "tool_name": toolSlackPost,
 		"tool_input": map[string]any{"channel": bot, "text": longUnchecked}})
 	if dec(o) != "deny" || o.HookSpecificOutput.PermissionDecisionReason != writingDenyReason([]string{"brief", "profile", "exemplars"}) {
 		t.Fatalf("got %+v", o)
@@ -419,8 +442,7 @@ func TestGate_NonSendMcpToolIsSilent(t *testing.T) {
 		return map[string]any{"session_id": "s", "tool_name": name, "transcript_path": "/no/such/log",
 			"tool_input": map[string]any{"channel": person, "text": longUnchecked}}
 	}
-	for _, name := range []string{"mcp__slack__conversations_search_messages", "mcp__claude_ai_Microsoft_365__outlook_read_mail",
-		"mcp__plugin_SomePlugin_slack__conversations_history", "mcp__builder-mcp__InternalSearch", "mcp__slack__conversations_add_message_v2", "mcp__x__send"} {
+	for _, name := range append(slices.Clone(readTools), toolSlackPost+"_v2", "mcp__x__send") {
 		if _, raw := hook(t, "pre-tool-extra", call(name)); raw != "" {
 			t.Errorf("%s: not a send tool, so want silence, got %s", name, raw)
 		}
@@ -440,7 +462,7 @@ func TestGate_ExtraModeSkipsDefaultSendTools(t *testing.T) {
 	call := func(name string) map[string]any {
 		return map[string]any{"session_id": "s", "tool_name": name, "tool_input": map[string]any{"channel": person, "text": longUnchecked}}
 	}
-	for _, name := range append(slices.Clone(state.DefaultSendTools), "mcp__plugin_SomePlugin_slack__conversations_add_message") {
+	for _, name := range append(slices.Clone(state.DefaultSendTools), inPlugin(toolSlackPost)) {
 		if _, raw := hook(t, "pre-tool-extra", call(name)); raw != "" {
 			t.Errorf("%s: a default send tool belongs to pre-tool, so --extra stays silent: got %s", name, raw)
 		}
@@ -465,41 +487,72 @@ func TestGate_ExtraModeSkipsDefaultSendTools(t *testing.T) {
 }
 
 // TestPreTool_I3_SendingSavedDraftWithNoBodyAsks reproduces I3: sending a
-// saved draft with no body sends whatever the draft holds, so the gate
-// asks the person instead of passing text it never saw. A send that
-// carries a checked body still goes through.
+// saved draft with no body sends whatever the draft holds, and the gate
+// printed nothing because it had no text to check. It must ask the
+// person instead. A send that carries a checked body still goes through.
 func TestPreTool_I3_SendingSavedDraftWithNoBodyAsks(t *testing.T) {
 	newHome(t)
-	send := func(in map[string]any) map[string]any {
-		return map[string]any{"tool_name": "mcp__claude_ai_Microsoft_365__outlook_send_draft", "tool_input": in}
+	send := func(extra map[string]any) map[string]any {
+		in := maps.Clone(sendDraftInput)
+		maps.Copy(in, extra)
+		return map[string]any{"tool_name": toolSendDraft, "tool_input": in}
 	}
-	o, _ := hook(t, "pre-tool", send(map[string]any{"draftId": "d1"}))
+	o, _ := hook(t, "pre-tool", send(nil))
 	if dec(o) != "ask" || !strings.Contains(o.HookSpecificOutput.PermissionDecisionReason, "can't see") {
 		t.Fatalf("sending a saved draft with no body must ask, saying Byline can't see the text: got %+v", o)
 	}
-	o, _ = hook(t, "pre-tool", send(map[string]any{"draftId": "d1", "body": ""}))
+	o, _ = hook(t, "pre-tool", send(map[string]any{"body": ""}))
 	if dec(o) != "ask" {
 		t.Fatalf("an empty body is still no text to check, so it must ask: got %+v", o)
 	}
-	o, _ = hook(t, "pre-tool", send(map[string]any{"draftId": "d1", "body": bodyHTML()}))
+	o, _ = hook(t, "pre-tool", send(map[string]any{"body": bodyHTML()}))
 	if dec(o) != "deny" {
 		t.Fatalf("sending with an unchecked body must still be stopped: got %+v", o)
 	}
 	addReceipt(t, bodyMD, 0)
-	if o, _ = hook(t, "pre-tool", send(map[string]any{"draftId": "d1", "body": bodyHTML()})); dec(o) != "" {
+	if o, _ = hook(t, "pre-tool", send(map[string]any{"body": bodyHTML()})); dec(o) != "" {
 		t.Fatalf("sending with a body that passed its check must go through: got %+v", o)
 	}
 }
 
+// TestPreTool_DraftOperations: a draft tool whose operation field says
+// what a call does (toolDraftOps) is only checked when the call creates
+// or updates a body, or sends: reading, deleting or retitling a draft
+// sends nothing, so it stays silent. Sending the saved draft as is gets
+// the saved-draft ask. The settings line makes it a send tool in a copy
+// where it isn't a default.
+func TestPreTool_DraftOperations(t *testing.T) {
+	newHome(t)
+	os.WriteFile(paths.SettingsPath(), []byte(`{"format":1,"send_tools":["`+toolDraftOps+`"]}`), 0o600)
+	call := func(in map[string]any) (hookOutput, string) {
+		return hook(t, "pre-tool", map[string]any{"tool_name": toolDraftOps, "tool_input": in})
+	}
+	for _, in := range []map[string]any{
+		{"operation": "get"},
+		{"operation": "delete", "draftId": "d1"},
+		{"operation": "update", "draftId": "d1", "subject": "New subject"},
+	} {
+		if _, raw := call(in); raw != "" {
+			t.Errorf("%v sends nothing, so it stays silent: got %s", in, raw)
+		}
+	}
+	if o, _ := call(map[string]any{"operation": "update", "draftId": "d1", "send": true}); dec(o) != "ask" || o.HookSpecificOutput.PermissionDecisionReason != draftSendAskReason {
+		t.Errorf("sending the saved draft as is: want the saved-draft ask, got %+v", o)
+	}
+	if o, _ := call(map[string]any{"operation": "create", "body": longUnchecked}); dec(o) != "deny" {
+		t.Errorf("creating a draft with unchecked text: want deny, got %+v", o)
+	}
+}
+
 // TestPreTool_M2_AddedToolWithUnseenTextAsks: a send tool the person added
-// whose text is in a field the gate doesn't read gets an ask; one whose
-// text it can read still gets the structure check, and a default tool with
-// no text asks too.
+// whose text is in a field the gate doesn't read gets an ask, and one
+// whose text it can read still gets the structure check.
+// TestPreTool_DraftOperations covers a call that sends nothing at all.
 func TestPreTool_M2_AddedToolWithUnseenTextAsks(t *testing.T) {
 	newHome(t)
-	os.WriteFile(paths.SettingsPath(), []byte(`{"format":1,"send_tools":["mcp__slack__files_upload"]}`), 0o600)
+	os.WriteFile(paths.SettingsPath(), []byte(`{"format":1,"send_tools":["`+toolAddedUpload+`"]}`), 0o600)
 	call := func(input map[string]any) (hookOutput, string) {
-		return hook(t, "pre-tool-extra", map[string]any{"tool_name": "mcp__slack__files_upload", "tool_input": input})
+		return hook(t, "pre-tool-extra", map[string]any{"tool_name": toolAddedUpload, "tool_input": input})
 	}
 	if o, _ := call(map[string]any{"channelId": person, "content": "x", "initialComment": longUnchecked}); dec(o) != "ask" || o.HookSpecificOutput.PermissionDecisionReason != unseenTextAskReason {
 		t.Errorf("text in a field the gate can't read: want ask, got %+v", o)
@@ -510,7 +563,27 @@ func TestPreTool_M2_AddedToolWithUnseenTextAsks(t *testing.T) {
 	if o, _ := call(map[string]any{"channelId": person, "text": longUnchecked}); dec(o) != "deny" {
 		t.Errorf("text the gate can read: want the structure check's deny, got %+v", o)
 	}
-	if o, _ := hook(t, "pre-tool", map[string]any{"tool_name": "mcp__claude_ai_Microsoft_365__outlook_create_draft", "tool_input": map[string]any{"subject": "x"}}); dec(o) != "ask" {
-		t.Errorf("a default send tool with no text it can read: want ask, got %+v", o)
+}
+
+// TestPreTool_Decision3_DefaultSendToolWithUnseenTextAsks: decision 3, 18
+// Nov. A default send tool with no text the gate can see now asks about it
+// instead of going through unchecked -- the same ask an added tool already
+// got. A default tool whose text the gate can read is unaffected: it still
+// goes through the usual structure check.
+func TestPreTool_Decision3_DefaultSendToolWithUnseenTextAsks(t *testing.T) {
+	newHome(t)
+	send := func(input map[string]any) hookOutput {
+		o, _ := hook(t, "pre-tool", map[string]any{"tool_name": toolEmailSend, "tool_input": input})
+		return o
+	}
+	if o := send(map[string]any{"to": []string{"someone@example.com"}, "subject": "x"}); dec(o) != "ask" || o.HookSpecificOutput.PermissionDecisionReason != unseenTextAskReason {
+		t.Fatalf("a default tool with no visible text must ask, same as an added tool: got %+v", o)
+	}
+	if o := send(map[string]any{"to": []string{"someone@example.com"}, "subject": "x", "body": longUnchecked}); dec(o) != "deny" {
+		t.Fatalf("a default tool with visible text still goes through the structure check: got %+v", o)
+	}
+	addReceipt(t, bodyMD, 0)
+	if o := send(map[string]any{"to": []string{"someone@example.com"}, "subject": "x", "body": bodyHTML()}); dec(o) != "" {
+		t.Fatalf("a default tool with visible text that passed its check still goes through: got %+v", o)
 	}
 }

@@ -128,7 +128,7 @@ func TestState_NewerFormatIsNeverRewritten(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 	want(t, readFile(t, paths.MyRulesPath()), newer)
-	if ensureErr == nil || !strings.Contains(ensureErr.Error(), "newer version of Byline") || !strings.Contains(ensureErr.Error(), "; to update, run claude plugin update byline@byline in a terminal") {
+	if ensureErr == nil || !strings.Contains(ensureErr.Error(), "newer version of Byline") || !strings.Contains(ensureErr.Error(), "; to update, "+version.UpdateStep(os.Getenv)) {
 		t.Fatalf("%v", ensureErr)
 	}
 }
@@ -162,7 +162,7 @@ func TestState_TrailingContentMakesMyRulesUnreadable(t *testing.T) {
 	testHome(t)
 	EnsureVoiceFolder()
 	trailing := `{"format": 1, "add_rules": []}` + "\n" +
-		`  , "add_strings": {"W1": ["my own banned phrase"]}, "known_names": ["Pat Example"]}`
+		`  , "add_strings": {"X1": ["my own banned phrase"]}, "known_names": ["Pat Example"]}`
 	writeFile(t, paths.MyRulesPath(), trailing)
 	var ue *UnreadableError
 	if _, err := LoadMyRules(); !errors.As(err, &ue) {

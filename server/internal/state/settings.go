@@ -16,8 +16,11 @@ import (
 
 // Settings is the person's saved preferences, under BYLINE_HOME.
 //
-// There is no telemetry setting: Byline counts nothing, and an old
-// settings file's telemetry key is dropped on the next save.
+// There is no telemetry setting (gate review I5): nothing read the one
+// that used to live here, so saving it told a person who opted out that
+// usage counting was off while it carried on. If this copy counts usage
+// at all, its own off switch lives outside these settings; they never
+// claim to control it.
 type Settings struct {
 	Format            int      `json:"format"`
 	SendTools         []string `json:"send_tools"`
@@ -25,30 +28,8 @@ type Settings struct {
 	ExtraDraftPhrases []string `json:"extra_draft_phrases"`
 }
 
-// DefaultSendTools are the tools Byline's send checks always cover; no
-// settings edit can remove one. Each name is one a connector or server
-// publishes: Claude's Microsoft 365 connector (Outlook and Teams), the
-// most-used open-source Gmail and Google Workspace servers, and the
-// most-used open-source Slack server, under the server names their own
-// instructions register. Anything else, including connectors whose tool
-// names aren't published, is added through settings.
-var DefaultSendTools = []string{
-	"mcp__claude_ai_Microsoft_365__outlook_send_mail",
-	"mcp__claude_ai_Microsoft_365__outlook_forward_mail",
-	"mcp__claude_ai_Microsoft_365__outlook_send_draft",
-	"mcp__claude_ai_Microsoft_365__outlook_create_draft",
-	"mcp__claude_ai_Microsoft_365__outlook_create_reply_draft",
-	"mcp__claude_ai_Microsoft_365__outlook_create_reply_all_draft",
-	"mcp__claude_ai_Microsoft_365__outlook_update_draft",
-	"mcp__claude_ai_Microsoft_365__teams_send_chat_message",
-	"mcp__claude_ai_Microsoft_365__teams_send_channel_message",
-	"mcp__claude_ai_Microsoft_365__teams_reply_channel_message",
-	"mcp__gmail__send_email",
-	"mcp__gmail__draft_email",
-	"mcp__workspace-mcp__send_gmail_message",
-	"mcp__workspace-mcp__draft_gmail_message",
-	"mcp__slack__conversations_add_message",
-}
+// DefaultSendTools is declared in copy_specific.go: the tools Byline's
+// send checks always cover differ by copy.
 
 var (
 	toolNameRe  = regexp.MustCompile(`^mcp__[A-Za-z0-9_.-]+__[A-Za-z0-9_.-]+$`)

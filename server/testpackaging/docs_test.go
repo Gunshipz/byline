@@ -37,41 +37,34 @@ func TestNotices_CreditsAndModificationNotice(t *testing.T) {
 	}
 	text := string(data)
 
-	for _, want := range []string{
+	want := []string{
 		"https://github.com/blader/humanizer",
 		"Copyright (c) 2025 Siqi Chen",
 		"MIT License",
 		"Byline is a modified version of humanizer",
 		"https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing",
-	} {
-		if !strings.Contains(text, want) {
-			t.Fatalf("THIRD-PARTY-NOTICES missing %q", want)
+	}
+	want = append(want, thirdPartyNoticesExtra...)
+	for _, w := range want {
+		if !strings.Contains(text, w) {
+			t.Fatalf("THIRD-PARTY-NOTICES missing %q", w)
 		}
 	}
 }
 
-// TestDocs_RequiredSections checks that README.md and CONTRIBUTING.md each
-// contain every heading and literal phrase
-// Task 6.9 requires, so a doc edit that drops one fails loudly here instead
-// of silently in a person's hands.
+// docSectionCase is one file TestDocs_RequiredSections checks, and the
+// headings and literal phrases it must contain.
+type docSectionCase struct {
+	rel  string
+	want []string
+}
+
+// TestDocs_RequiredSections checks that this copy's own docs each contain
+// every heading and literal phrase Task 6.9 requires, so a doc edit that
+// drops one fails loudly here instead of silently in a person's hands.
 func TestDocs_RequiredSections(t *testing.T) {
 	root := repoRoot(t)
-	cases := []struct {
-		rel  string
-		want []string
-	}{
-		{"README.md", []string{
-			"## Install", "## What it checks", "## First run",
-			"## Privacy", "## Known limitations", "## Updating",
-			"claude plugin marketplace add gunshipz/byline", "claude plugin install byline@byline",
-			"~/.byline/", "Git for Windows",
-		}},
-		{"CONTRIBUTING.md", []string{
-			"## Rules for changes", "## Release checklist",
-			"server/scripts/embed.sh", "go test ./...", "requires_helper",
-		}},
-	}
-	for _, c := range cases {
+	for _, c := range requiredSectionsCases {
 		data, err := os.ReadFile(filepath.Join(root, c.rel))
 		if err != nil {
 			t.Fatalf("read %s: %v", c.rel, err)
@@ -114,11 +107,8 @@ func TestVersion_ChangelogTopEntryIsCurrentVersion(t *testing.T) {
 }
 
 // TestReleaseNotes_CurrentVersionHasNotes: every release ships
-// docs/release-notes/<version>.md for this copy's readers (release
-// checklist step 3), and this copy's notes stay free of anything
-// company-internal. The scanned-for word is split, the way
-// content.TestSharedPart_NoCompanyHosts splits it, so this file doesn't
-// match itself.
+// docs/release-notes/<version>.md for this copy's readers, a step in the
+// release checklist, and it never names the other copy.
 func TestReleaseNotes_CurrentVersionHasNotes(t *testing.T) {
 	root := repoRoot(t)
 	version := skillVersion(t, root)
@@ -129,8 +119,7 @@ func TestReleaseNotes_CurrentVersionHasNotes(t *testing.T) {
 	if !strings.HasPrefix(string(data), "# Byline "+version+"\n") {
 		t.Fatalf("release notes for %s must open with %q", version, "# Byline "+version)
 	}
-	companyWord := "ama" + "zon"
-	if strings.Contains(strings.ToLower(string(data)), companyWord) {
-		t.Fatalf("release notes for %s name a company-internal system; this copy's notes never do", version)
+	if strings.Contains(strings.ToLower(string(data)), otherCopyWord) {
+		t.Fatalf("release notes for %s name the other copy; they're for this copy's readers only", version)
 	}
 }

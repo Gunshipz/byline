@@ -1,17 +1,13 @@
 // cases_test.go ports today's 49 hook test cases (writing-rules-gate.test.sh's
-// 33 and draftcheck-gate.test.mjs's 16) onto the new gate, as one shared table
-// both TestGate_PortedCases (this file) and TestGate_ParityWithOldHooks
-// (parity_test.go) walk. Every value a real person would recognize --
-// channel ids, a bot id, a profile file name -- is read from the old scripts
-// at run time (see oldHooks in parity_test.go); nothing personal is a
-// literal in this file.
+// 33 and draftcheck-gate.test.mjs's 16) onto the new gate, as one table
+// TestGate_PortedCases (this file) walks against the new gate only; the
+// retired Node pipeline this once also ran against is gone.
 package gate
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -19,17 +15,13 @@ import (
 	"byline/internal/paths"
 )
 
-// Prompts and tool names used across the table, named the way the brief
-// names them.
+// Prompts used across the table, named the way the brief names them. The
+// tool names (toolEmailDraft and the rest) are each copy's own, in
+// copy_specific_test.go.
 const (
 	draftReplyPrompt = "draft a reply to the vendor about the rate limits"
 	draftSlackPrompt = "draft a slack message to the vendor"
 	draftMsgPrompt   = "draft a message to the vendor"
-
-	toolEmailDraft = "mcp__claude_ai_Microsoft_365__outlook_create_draft"
-	toolEmailSend  = "mcp__claude_ai_Microsoft_365__outlook_send_mail"
-	toolEmailReply = "mcp__claude_ai_Microsoft_365__outlook_create_reply_draft"
-	toolSlackPost  = "mcp__slack__conversations_add_message"
 )
 
 // step is one hook call rendered from a gateCase.
@@ -43,7 +35,7 @@ type step struct {
 	raw        bool           // send text as raw stdin
 }
 
-// gateCase is one ported test case, run by both runCaseNew and runCaseOld.
+// gateCase is one ported test case, run by runCaseNew against the new gate.
 type gateCase struct {
 	name     string // the old test's name (renames noted in the brief)
 	origin   string // "wrg §N" or "dcg #N"
@@ -73,14 +65,6 @@ func stepToolLog(tool string, input map[string]any, transcript string) step {
 	return step{mode: "pre-tool", tool: tool, input: input, transcript: transcript}
 }
 func stepRaw(text string) step { return step{mode: "pre-tool", raw: true, text: text} }
-
-// Today's live PreToolUse matchers, copied from ~/.claude/settings.json on
-// 2026-11-10 and anchored.
-var oldLiveRoutes = map[string]*regexp.Regexp{
-	"writing-rules-gate.mjs": regexp.MustCompile(`^(Skill|mcp__slack__conversations_add_message|mcp__claude_ai_Microsoft_365__outlook_(send|draft|reply|forward))$`),
-	"draftcheck-gate.mjs":    regexp.MustCompile(`^(Skill|mcp__slack__conversations_add_message|mcp__claude_ai_Microsoft_365__outlook_(send|draft|reply|forward))$`),
-	"slack-post-gate.mjs":    regexp.MustCompile(`^mcp__slack__conversations_add_message$`),
-}
 
 var portedCases = []gateCase{
 	// -- wrg §1: arming ------------------------------------------------
@@ -126,8 +110,8 @@ var portedCases = []gateCase{
 		steps: []step{stepPrompt(draftSlackPrompt), stepTool("Bash", map[string]any{})}, want: ""},
 	{name: "WebFetch allowed", origin: "wrg §3", session: true,
 		steps: []step{stepPrompt(draftSlackPrompt), stepTool("WebFetch", map[string]any{})}, want: ""},
-	{name: "mcp__slack__conversations_search_messages allowed", origin: "wrg §3", session: true,
-		steps: []step{stepPrompt(draftSlackPrompt), stepTool("mcp__slack__conversations_search_messages", map[string]any{})}, want: ""},
+	{name: "chat search tool allowed", origin: "wrg §3", session: true,
+		steps: []step{stepPrompt(draftSlackPrompt), stepTool(toolSlackSearch, map[string]any{})}, want: ""},
 	{name: "Skill(other) allowed", origin: "wrg §3", session: true,
 		steps: []step{stepPrompt(draftSlackPrompt), stepTool("Skill:other", nil)}, want: ""},
 
@@ -136,17 +120,20 @@ var portedCases = []gateCase{
 		steps: []step{stepPrompt(draftSlackPrompt), stepTool(toolEmailSend, map[string]any{})}, want: "deny"},
 	{name: "still blocked with 2 of 3", origin: "wrg §4", session: true,
 		steps: []step{stepPrompt(draftSlackPrompt), stepRead("brief"), stepRead("exemplars"), stepTool(toolEmailSend, map[string]any{})}, want: "deny"},
+	// Decision 3, 18 Nov: a default send tool with no visible text now
+	// asks instead of going through silently; the retired old hooks never
+	// checked this, so this case no longer matches what they once did.
 	{name: "allowed with all 3", origin: "wrg §4", session: true,
-		steps: []step{stepPrompt(draftSlackPrompt), stepRead("brief"), stepRead("exemplars"), stepRead("profile"), stepTool(toolEmailSend, map[string]any{"body": "Thanks, done."})}, want: ""},
+		steps: []step{stepPrompt(draftSlackPrompt), stepRead("brief"), stepRead("exemplars"), stepRead("profile"), stepTool(toolEmailSend, map[string]any{})}, want: "ask"},
 	{name: "Skill(polish) allowed with all 3", origin: "wrg §4", session: true,
-		steps: []step{stepPrompt(draftSlackPrompt), stepRead("brief"), stepRead("exemplars"), stepRead("profile"), stepTool(toolEmailSend, map[string]any{"body": "Thanks, done."}), stepTool("Skill:polish", nil)}, want: ""},
+		steps: []step{stepPrompt(draftSlackPrompt), stepRead("brief"), stepRead("exemplars"), stepRead("profile"), stepTool(toolEmailSend, map[string]any{}), stepTool("Skill:polish", nil)}, want: ""},
 
 	// -- wrg §5: not armed = stay out of the way -------------------------
 	{name: "Write allowed when unarmed", origin: "wrg §5", session: true,
 		steps: []step{stepTool("Write", map[string]any{})}, want: ""},
 	{name: "Agent allowed when unarmed", origin: "wrg §5", session: true,
 		steps: []step{stepTool("Agent", map[string]any{})}, want: ""},
-	{name: "mcp__slack__conversations_add_message allowed when unarmed", origin: "wrg §5", session: true,
+	{name: "chat post allowed when unarmed", origin: "wrg §5", session: true,
 		steps: []step{stepTool(toolSlackPost, map[string]any{})}, want: "ask"},
 
 	// -- wrg §6: fail-closed on malformed payload ------------------------
@@ -162,8 +149,10 @@ var portedCases = []gateCase{
 	// -- wrg §8: transcript fallback counts real Read calls, not mentions -
 	{name: "mentions of the files in the log do not count as reads", origin: "wrg §8", session: true,
 		steps: []step{stepPrompt(draftMsgPrompt), stepToolLog(toolEmailSend, map[string]any{}, "mentions")}, want: "deny"},
+	// Decision 3, 18 Nov: same as the §4 case above -- the empty send now
+	// asks, so this no longer matches the retired old hooks either.
 	{name: "real Read calls in the log count when the record was missed", origin: "wrg §8", session: true,
-		steps: []step{stepPrompt(draftMsgPrompt), stepToolLog(toolEmailSend, map[string]any{"body": "Thanks, done."}, "reads")}, want: ""},
+		steps: []step{stepPrompt(draftMsgPrompt), stepToolLog(toolEmailSend, map[string]any{}, "reads")}, want: "ask"},
 
 	// -- dcg: draftcheck-gate ----------------------------------------------
 	{name: "blocks Slack post with no receipt", origin: "dcg #1",
@@ -188,8 +177,8 @@ var portedCases = []gateCase{
 		steps: []step{stepTool(toolSlackPost, map[string]any{"channel": "<person>", "text": bodySlack})}, want: "deny"},
 	{name: "allows posts to a bot chat on the exempt list", origin: "dcg #8",
 		steps: []step{stepTool(toolSlackPost, map[string]any{"channel": "<bot>", "text": longUnchecked})}, want: "allow"},
-	{name: "allows a short draft", origin: "dcg #9",
-		steps: []step{stepTool(toolEmailDraft, map[string]any{"body": "Thanks, done."})}, want: ""},
+	{name: "allows a quiet draft call", origin: "dcg #9",
+		steps: []step{stepTool(toolEmailDraft, silentDraftCall)}, want: ""},
 	{name: "ignores unrelated tools", origin: "dcg #10",
 		steps: []step{stepTool("Read", map[string]any{"file_path": "/tmp/x"})}, want: ""},
 	{name: "blocks a draft via bodyFilePath with no receipt", origin: "dcg #11",

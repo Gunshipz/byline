@@ -30,9 +30,21 @@ func loadSet(stderr io.Writer) (*rules.Set, error) {
 	return set, err
 }
 
+// extraModeHelp names any mode a copy's own file adds beyond the ones
+// dispatched here, for the "modes:" help and unknown-mode text -- for
+// example ", setup-quick". Empty by default.
+var extraModeHelp string
+
 // modeList names every mode run dispatches on, for "help" and an unknown
 // mode (gate finding M10).
-const modeList = "modes: (none: MCP server), tool <name>, version, generate, draftcheck, factlint, lint, voicecheck, hook, dev split"
+func modeList() string {
+	return "modes: (none: MCP server), tool <name>, version, generate, draftcheck, factlint, lint, voicecheck, hook" + extraModeHelp + ", dev split"
+}
+
+// extraMode, if set, runs a mode a copy's own file adds beyond the ones
+// dispatched here, returning ok=false to fall through to the
+// unknown-mode message. nil by default.
+var extraMode func(args []string, stdout io.Writer) (ok bool, code int)
 
 func run(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 1 && args[0] == "version" {
@@ -40,7 +52,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	if len(args) >= 1 && args[0] == "help" {
-		fmt.Fprintln(stdout, modeList)
+		fmt.Fprintln(stdout, modeList())
 		return 0
 	}
 	if len(args) >= 1 && args[0] == "generate" {
@@ -111,10 +123,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		gate.Run(hookMode, os.Stdin, os.Stdout)
 		os.Exit(0)
 	}
+	if len(args) >= 1 && extraMode != nil {
+		if ok, code := extraMode(args, stdout); ok {
+			return code
+		}
+	}
 	if len(args) >= 1 {
-		fmt.Fprintf(stderr, "byline: unknown mode %q\n%s\n", args[0], modeList)
+		fmt.Fprintf(stderr, "byline: unknown mode %q\n%s\n", args[0], modeList())
 	} else {
-		fmt.Fprintln(stderr, modeList)
+		fmt.Fprintln(stderr, modeList())
 	}
 	return 2
 }
@@ -128,10 +145,16 @@ func isTerminal(f *os.File) bool {
 	return err == nil && fi.Mode()&os.ModeCharDevice != 0
 }
 
+// afterServe, if set, runs right after the MCP server's Serve loop
+// returns and before the process exits -- for a copy whose start hook
+// kicked off background work that needs to finish first. nil by
+// default.
+var afterServe func(srv *mcp.Server)
+
 func main() {
-	// No arguments: Claude Code launches byline-mcp this
-	// way and talk to it over stdio, so this bypasses run()'s plain text
-	// modes entirely rather than route JSON-RPC bytes through an io.Writer
+	// No arguments: every real launcher starts byline-mcp this way and
+	// talks to it over stdio, so this bypasses run()'s plain text modes
+	// entirely rather than route JSON-RPC bytes through an io.Writer
 	// meant for them.
 	if len(os.Args) == 1 {
 		// Gate finding M14: run by hand with no arguments, this used to
@@ -139,10 +162,13 @@ func main() {
 		// saw a hang. Every real launcher pipes stdin, so this only fires
 		// for a person at a real terminal.
 		if isTerminal(os.Stdin) {
-			fmt.Fprintln(os.Stderr, modeList)
+			fmt.Fprintln(os.Stderr, modeList())
 		}
 		srv := mcp.NewServer()
 		srv.Serve(os.Stdin, os.Stdout)
+		if afterServe != nil {
+			afterServe(srv)
+		}
 		os.Exit(0)
 	}
 	if os.Args[1] == "tool" {
